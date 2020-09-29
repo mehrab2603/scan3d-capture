@@ -37,6 +37,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ProjectorWidget.hpp"
 #include "VideoInput.hpp"
 
+#ifdef USE_SPINNAKER
+#include "CameraConfigurationDialog.hpp"
+#endif
+
 class CaptureDialog : public QDialog, public Ui::CaptureDialog
 {
     Q_OBJECT
@@ -76,6 +80,9 @@ public slots:
     void on_test_check_stateChanged(int state);
     void on_test_prev_button_clicked(bool checked = false);
     void on_test_next_button_clicked(bool checked = false);
+  #ifdef USE_SPINNAKER
+    void on_camera_configuration_button_clicked(bool checked = false);
+  #endif
 
     void auto_next();
 

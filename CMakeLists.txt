@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.10.0)
 
-option(WITH_FLYCAPTURE "Use FlyCapture2 SDK for supporting PointGrey Cameras" OFF)
+option(WITH_SPINNAKER "Use the Spinnaker SDK for increased camera support" OFF)
 
 set(OpenGL_GL_PREFERENCE "GLVND")
-set(OpenCV_DIR "" CACHE FILEPATH "Path to OpenCV 2") 
+set(OpenCV_DIR "" CACHE FILEPATH "Path to OpenCV 2")
+set(Spinnaker_DIR "" CACHE FILEPATH "Path to the Spinnaker SDK")
 set(PROJECT_NAME "scan3d-capture")
 
 project(${PROJECT_NAME})
@@ -50,12 +51,19 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE src forms ${OPENCV_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS} ${Qt5OpenGL_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${OPENGL_LIBRARIES} Qt5::OpenGL)
 
-if(WITH_FLYCAPTURE)
-    find_package(FlyCapture2 REQUIRED)
+if(WITH_SPINNAKER)
+    find_package(Spinnaker REQUIRED)
     
-    target_include_directories(${PROJECT_NAME} PRIVATE ${FLYCAPTURE2_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} ${FLYCAPTURE2_LIBRARIES})
-    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_FLYCAPTURE)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${SPINNAKER_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} ${SPINNAKER_LIBRARIES})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_SPINNAKER)
+
+    target_sources(${PROJECT_NAME} PRIVATE
+        src/CameraConfigurationDialog.cpp
+        forms/CameraConfigurationDialog.ui
+    )
+
+    MESSAGE(STATUS "Building with the Spinnaker SDK")
 endif()
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)

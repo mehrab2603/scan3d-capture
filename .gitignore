@@ -32,7 +32,6 @@
 *.app
 
 # Directories
-cmake
 build
 bin
 install

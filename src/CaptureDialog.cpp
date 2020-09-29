@@ -80,6 +80,11 @@ CaptureDialog::CaptureDialog(QWidget * parent, Qt::WindowFlags flags):
     test_prev_button->setEnabled(false);
     test_next_button->setEnabled(false);
 
+#ifndef USE_SPINNAKER
+    //camera config button
+    camera_configuration_button->setVisible(false);
+#endif
+
     //update projector view
     _projector.set_screen(screen_combo->currentIndex());
 
@@ -214,11 +219,23 @@ bool CaptureDialog::start_camera(void)
     stop_camera();
 
     _video_input.set_camera_index(index);
-#ifdef USE_FLYCAPTURE
     _video_input.set_camera_name(camera_combo->currentText().toStdString());
+
+#ifdef USE_SPINNAKER
+
+    if (_video_input.is_spinnaker_camera())
+    {
+        camera_configuration_button->setVisible(true);
+    }
+
 #endif
-    _video_input.start();
-    _video_input.waitForStart();
+
+    if (!_video_input.isRunning())
+    {
+        _video_input.start();
+        _video_input.waitForStart();
+    }
+    
 
     if (!_video_input.isRunning())
     {   //error
@@ -500,6 +517,15 @@ void CaptureDialog::on_test_next_button_clicked(bool checked)
     _projector.clear_updated();
     _projector.next();
 }
+
+#ifdef USE_SPINNAKER
+void CaptureDialog::on_camera_configuration_button_clicked(bool checked)
+{
+    CameraConfigurationDialog dialog(_video_input, this);
+    dialog.setModal(true);
+    dialog.exec();
+}
+#endif
 
 void CaptureDialog::auto_next()
 {

@@ -58,8 +58,9 @@ VideoInput::VideoInput(QObject  * parent):
     QThread(parent),
     _camera_index(-1),
     _camera_name(""),
-#ifdef USE_FLYCAPTURE
-    _flycap_cam(NULL),
+#ifdef USE_SPINNAKER
+    _spinnaker_system(Spinnaker::System::GetInstance()),
+    _spinnaker_camera(nullptr),
 #endif
     _video_capture(NULL),
     _init(false),
@@ -71,6 +72,10 @@ VideoInput::VideoInput(QObject  * parent):
 VideoInput::~VideoInput()
 {
     stop_camera(true);
+
+#ifdef USE_SPINNAKER
+    _spinnaker_system->ReleaseInstance();
+#endif
 }
 
 void VideoInput::run()
@@ -93,32 +98,42 @@ void VideoInput::run()
     QTime timer;
     timer.start();
 
-#ifdef USE_FLYCAPTURE
-    while(_flycap_cam && !_stop && error_count<max_error)
+#ifdef USE_SPINNAKER
+    while(_spinnaker_camera && !_stop && error_count<max_error)
     {
-        FlyCapture2::Image rawImage;
-        FlyCapture2::Error error = _flycap_cam->RetrieveBuffer(&rawImage);
+        Spinnaker::ImagePtr pResultImage = nullptr;
 
-        if (error != FlyCapture2::PGRERROR_OK)
+        try
         {
-            //error
-            std::cerr << "flycap camera capture failed" << std::endl;
-            error.PrintErrorTrace();
+            pResultImage = _spinnaker_camera->GetNextImage(1000);
+
+            if (pResultImage->IsIncomplete())
+            {
+                // Retrieve and print the image status description
+                std::cout << "Image incomplete: " << Spinnaker::Image::GetImageStatusDescription(pResultImage->GetImageStatus()) << "..." << std::endl;
+            }
+            else
+            {
+                error_count = 0;
+
+                Spinnaker::ImagePtr convertedImage = pResultImage->Convert(Spinnaker::PixelFormat_BGR8, Spinnaker::DIRECTIONAL_FILTER);
+                
+                unsigned int xPadding = static_cast<unsigned int>(convertedImage->GetXPadding());
+                unsigned int yPadding = static_cast<unsigned int>(convertedImage->GetYPadding());
+                unsigned int rowsize = static_cast<unsigned int>(convertedImage->GetWidth());
+                unsigned int colsize = static_cast<unsigned int>(convertedImage->GetHeight());
+
+                //image data contains padding. When allocating Mat container size, you need to account for the X,Y image data padding. 
+                emit new_image(cv::Mat(colsize + yPadding, rowsize + xPadding, CV_8UC3, convertedImage->GetData(), convertedImage->GetStride()));
+            }
+        }
+        catch (Spinnaker::Exception& e)
+        {
+            std::cerr << "Error captuing image: " << e.what() << std::endl;
             error_count++;
         }
-        else
-        {
-            //ok
-            error_count = 0;
 
-            //convert to OpenCV's Mat: https://www.kevinhughes.ca/tutorials/point-grey-blackfly-and-opencv
-            FlyCapture2::Image rgbImage;
-            rawImage.Convert(FlyCapture2::PIXEL_FORMAT_BGR, &rgbImage);
-            unsigned int rowBytes = (double)rgbImage.GetReceivedDataSize() / (double)rgbImage.GetRows();
-
-            cv::Mat frame = cv::Mat(rgbImage.GetRows(), rgbImage.GetCols(), CV_8UC3, rgbImage.GetData(), rowBytes);
-            emit new_image(frame);
-        }
+        if (pResultImage) pResultImage->Release();
     }
 #endif
 
@@ -149,8 +164,8 @@ bool VideoInput::start_camera(void)
         return false;
     }
 
-#ifdef USE_FLYCAPTURE
-    if (_flycap_cam || _video_capture)
+#ifdef USE_SPINNAKER
+    if (_spinnaker_camera || _video_capture)
 #else
     if (_video_capture)
 #endif
@@ -171,33 +186,14 @@ bool VideoInput::start_camera(void)
     int CLASS = CV_CAP_V4L2;
 #endif
 
-#ifdef USE_FLYCAPTURE
-    if (_is_flycam)
+#ifdef USE_SPINNAKER
+    if (is_spinnaker_camera())
     {
-        FlyCapture2::PGRGuid guid;
-        FlyCapture2::Error error;
+        Spinnaker::CameraList cameraList = _spinnaker_system->GetCameras();
+        _spinnaker_camera = cameraList.GetBySerial(_camera_name.substr(11));
+        cameraList.Clear();
 
-        unsigned int guidValue[4];
-        guid_string_to_array(_camera_name.c_str(), guidValue);
-
-        for (unsigned int i = 0; i < 4; i++)
-        {
-            guid.value[i] = guidValue[i];
-        }
-
-        _flycap_cam = std::make_shared<FlyCapture2::Camera>();
-        error = _flycap_cam->Connect(&guid);
-        
-        if (error != FlyCapture2::PGRERROR_OK)
-        {
-            std::cerr << "flycap camera open failed, index=" << index << std::endl;
-            error.PrintErrorTrace();
-            return false;
-        }
-        else
-        {
-            std::cout << "flycam opened: " << _camera_name << std::endl;
-        }
+        std::cout << "Spinnaker camera opened: " << _camera_name << std::endl;
     }
     else
     {
@@ -209,10 +205,10 @@ bool VideoInput::start_camera(void)
         std::cerr << "camera open failed, index=" << index << std::endl;
         return false;
     }
-#ifdef USE_FLYCAPTURE
+#ifdef USE_SPINNAKER
     }
 
-    configure_flycap(index,silent);
+    configure_spinnaker_camera(index, silent);
 #else
 #ifdef _MSC_VER
     configure_dshow(index,silent);
@@ -229,15 +225,12 @@ bool VideoInput::start_camera(void)
 
 void VideoInput::stop_camera(bool force)
 {
-#ifdef USE_FLYCAPTURE
-    if (_is_flycam)
+#ifdef USE_SPINNAKER
+    if (_spinnaker_camera)
     {
-        FlyCapture2::Error error = _flycap_cam->StopCapture();
-
-        if (error != FlyCapture2::PGRERROR_OK)
-        {
-            error.PrintErrorTrace();
-        }
+        _spinnaker_camera->EndAcquisition();
+        _spinnaker_camera->DeInit();
+        _spinnaker_camera = nullptr;
     }
 #endif
     if (_video_capture)
@@ -252,84 +245,77 @@ void VideoInput::stop_camera(bool force)
         cvReleaseCapture(&_video_capture);
         _video_capture = NULL;
     }
+
+    _camera_name = "";
 }
 
-#ifdef USE_FLYCAPTURE
-void VideoInput::guid_string_to_array(const char* guidString, unsigned int* guidValue)
+#ifdef USE_SPINNAKER
+
+void VideoInput::configure_spinnaker_camera(int index, bool silent)
 {
-    unsigned int i = 0, j = 0, currentNumber = 0;
-
-    while (j < 44 && i < 4)
-    {
-        char currentChar = guidString[j];
-        j++;
-
-        if (currentChar == '|')
-        {
-            *guidValue = currentNumber;
-            guidValue++;
-            i++;
-            currentNumber = 0;
-            continue;
-        }
-
-        currentNumber = currentNumber * 10 + (currentChar - '0');
-    }
-    
-    if (!(i == 4) || !(j == 44)) throw -1;
-}
-
-bool VideoInput::is_flycam()
-{
-    bool isFlyCapCam = true;
-
     try
     {
-        unsigned int guidValue[4];
-        guid_string_to_array(_camera_name.c_str(), guidValue);
-    }
-    catch(int e)
-    {
-        if (e != 0)
+        // Retrieve TL device nodemap and print device information
+        Spinnaker::GenApi::INodeMap& nodeMapTLDevice = _spinnaker_camera->GetTLDeviceNodeMap();
+
+        // Print device info
+        Spinnaker::GenApi::FeatureList_t features;
+        const Spinnaker::GenApi::CCategoryPtr category = nodeMapTLDevice.GetNode("DeviceInformation");
+        if (Spinnaker::GenApi::IsAvailable(category) && Spinnaker::GenApi::IsReadable(category))
         {
-            isFlyCapCam = false;
+            category->GetFeatures(features);
+
+            for (auto it = features.begin(); it != features.end(); ++it)
+            {
+                const Spinnaker::GenApi::CNodePtr pfeatureNode = *it;
+                std::cout << pfeatureNode->GetName() << " : ";
+                Spinnaker::GenApi::CValuePtr pValue = static_cast<Spinnaker::GenApi::CValuePtr>(pfeatureNode);
+                std::cout << (IsReadable(pValue) ? pValue->ToString() : "Node not readable");
+                std::cout << std::endl;
+            }
         }
+        else
+        {
+            std::cerr << "Error: Device control information not available." << std::endl;
+        }
+
+        // Initialize camera
+        _spinnaker_camera->Init();
+
+        // Retrieve GenICam nodemap
+        Spinnaker::GenApi::INodeMap& nodeMap = _spinnaker_camera->GetNodeMap();
+
+        // Set up image acquisition
+        Spinnaker::GenApi::CEnumerationPtr ptrAcquisitionMode = nodeMap.GetNode("AcquisitionMode");
+
+        if (!Spinnaker::GenApi::IsAvailable(ptrAcquisitionMode) || !Spinnaker::GenApi::IsWritable(ptrAcquisitionMode))
+        {
+            std::cerr << "Error configuring Spinnaker camera: Unable to set acquisition mode to continuous (enum retrieval). Aborting..." << std::endl;
+            return;
+        }
+
+        // Retrieve entry node from enumeration node
+        Spinnaker::GenApi::CEnumEntryPtr ptrAcquisitionModeContinuous = ptrAcquisitionMode->GetEntryByName("Continuous");
+
+        if (!Spinnaker::GenApi::IsAvailable(ptrAcquisitionModeContinuous) || !Spinnaker::GenApi::IsReadable(ptrAcquisitionModeContinuous))
+        {
+            std::cerr << "Error configuring Spinnaker camera:  Unable to set acquisition mode to continuous (entry retrieval). Aborting..." << std::endl;
+            return;
+        }
+
+        // Retrieve integer value from entry node
+        const int64_t acquisitionModeContinuous = ptrAcquisitionModeContinuous->GetValue();
+
+        // Set integer value from entry node as new value of enumeration node
+        ptrAcquisitionMode->SetIntValue(acquisitionModeContinuous);
+
+        // Start acquisition
+        _spinnaker_camera->BeginAcquisition();
+        
     }
-
-    return isFlyCapCam;
-}
-
-void VideoInput::configure_flycap(int index, bool silent)
-{
-    // Get the camera configuration
-    FlyCapture2::FC2Config config;
-    FlyCapture2::Error error = _flycap_cam->GetConfiguration(&config);
-    if (error != FlyCapture2::PGRERROR_OK)
+    catch (Spinnaker::Exception& e)
     {
-        std::cerr << "Error getting flycap camera configuration." << std::endl;
-        error.PrintErrorTrace();
-        return;
-    }
-
-    // Set the number of driver buffers used to 10.
-    config.numBuffers = 10;
-
-    // Set the camera configuration
-    error = _flycap_cam->SetConfiguration(&config);
-    if (error != FlyCapture2::PGRERROR_OK)
-    {
-        std::cerr << "Error setting flycap camera configuration." << std::endl;
-        error.PrintErrorTrace();
-        return;
-    }
-
-    // Start capturing images
-    error = _flycap_cam->StartCapture();
-    if (error != FlyCapture2::PGRERROR_OK)
-    {
-        std::cerr << "Error starting image capturing." << std::endl;
-        error.PrintErrorTrace();
-        return;
+        std::cerr << "Error configuring Spinnaker camera: " << e.what() << std::endl;
     }
 }
 
@@ -345,10 +331,10 @@ void VideoInput::waitForStart(void)
 
 void VideoInput::setImageSize(size_t width, size_t height)
 {
-#ifdef USE_FLYCAPTURE
-  if (_flycap_cam)
+#ifdef USE_SPINNAKER
+  if (_spinnaker_camera)
   {
-
+      //TODO: implementation
   }
 #endif
   if (_video_capture)
@@ -795,36 +781,21 @@ QStringList VideoInput::list_devices_v4l2(bool silent)
         CameraNumber++;
     } /* End while */
 
-#ifdef USE_FLYCAPTURE
-    FlyCapture2::BusManager busMgr;
-    unsigned int numCameras;
-    FlyCapture2::Error error = busMgr.GetNumOfCameras(&numCameras);
+#ifdef USE_SPINNAKER
 
-    if(error == FlyCapture2::PGRERROR_OK)
+    Spinnaker::CameraList cameraList = _spinnaker_system->GetCameras();
+
+    for (unsigned int i = 0; i < cameraList.GetSize(); i++)
     {
-       for(unsigned int i = 0; i < numCameras; i++)
+        Spinnaker::GenApi::CStringPtr ptrStringSerial = cameraList.GetByIndex(i)->GetTLDeviceNodeMap().GetNode("DeviceSerialNumber");
+        if (Spinnaker::GenApi::IsAvailable(ptrStringSerial) && Spinnaker::GenApi::IsReadable(ptrStringSerial))
         {
-            FlyCapture2::PGRGuid guid;
-            error = busMgr.GetCameraFromIndex(i, &guid);
-
-            if(error == FlyCapture2::PGRERROR_OK)
-            {
-                std::string guidString = "";
-                for (unsigned int i: guid.value) {
-                    guidString += std::to_string(i) + "|";
-                }
-
-                list.append(guidString.c_str());
-
-                // std::cerr << guidString << "\n";
-                // unsigned int guidValue[4];
-                // guid_string_to_array(guidString.c_str(), guidValue);
-                // for(unsigned int i:guidValue) std::cerr << i << " ";
-                // std::cerr << "\n";
-                
-            }
+            sprintf(deviceName, "Spinnaker: %s", ptrStringSerial->GetValue().c_str());
+            list.append(deviceName);
         }
     }
+
+    cameraList.Clear();
 #endif
 
     if (!silent) { fprintf(stderr, "v4l numCameras %d\n", list.length()); }

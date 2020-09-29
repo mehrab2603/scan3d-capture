@@ -34,8 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#ifdef USE_FLYCAPTURE
-#   include "FlyCapture2.h"
+#ifdef USE_SPINNAKER
+#   include "Spinnaker.h"
 #endif
 
 class VideoInput : public QThread
@@ -50,15 +50,17 @@ public:
     inline void set_camera_index(int index) {_camera_index = index;}
     inline int get_camera_index(void) const {return _camera_index;}
 
-#ifdef USE_FLYCAPTURE
-    inline void set_camera_name(std::string name) {_camera_name = name; _is_flycam = is_flycam();}
+#ifdef USE_SPINNAKER
+    inline void set_camera_name(std::string name) {_camera_name = name;}
     inline std::string get_camera_name(void) const {return _camera_name;}
+    inline bool is_spinnaker_camera(void) const {return _camera_name != "" && _camera_name.rfind("Spinnaker", 0) == 0;}
+    // std::shared_ptr<FlyCapture2::FC2Config> get_camera_config();
 #endif
 
     void setImageSize(size_t width, size_t height);
 
-    static QStringList list_devices(void);
-    static QStringList list_device_resolutions(int index);
+    QStringList list_devices(void);
+    QStringList list_device_resolutions(int index);
 
     void waitForStart(void);
 
@@ -69,33 +71,31 @@ protected:
     virtual void run();
 
 private:
-    static QStringList list_devices_dshow(bool silent);
-    static QStringList list_devices_quicktime(bool silent);
-    static QStringList list_devices_v4l2(bool silent);
+    QStringList list_devices_dshow(bool silent);
+    QStringList list_devices_quicktime(bool silent);
+    QStringList list_devices_v4l2(bool silent);
 
     void configure_dshow(int index, bool silent);
     void configure_quicktime(int index, bool silent);
     void configure_v4l2(int index, bool silent);
 
-    static QStringList list_device_resolutions_dshow(int index, bool silent);
-    static QStringList list_device_resolutions_quicktime(int index, bool silent);
-    static QStringList list_device_resolutions_v4l2(int index, bool silent);
+    QStringList list_device_resolutions_dshow(int index, bool silent);
+    QStringList list_device_resolutions_quicktime(int index, bool silent);
+    QStringList list_device_resolutions_v4l2(int index, bool silent);
 
     bool start_camera(void);
     void stop_camera(bool force = false);
 
-#ifdef USE_FLYCAPTURE
-    static void guid_string_to_array(const char* guidString, unsigned int* guidValue);
-    bool is_flycam();
-    void configure_flycap(int index, bool silent);
+#ifdef USE_SPINNAKER
+    void configure_spinnaker_camera(int index, bool silent);
 #endif
 
 private:
     int _camera_index;
-#ifdef USE_FLYCAPTURE
     std::string _camera_name;
-    bool _is_flycam;
-    std::shared_ptr<FlyCapture2::Camera> _flycap_cam;
+#ifdef USE_SPINNAKER
+    Spinnaker::SystemPtr _spinnaker_system;
+    Spinnaker::CameraPtr _spinnaker_camera;
 #endif
     CvCapture * _video_capture;
     volatile bool _init;
