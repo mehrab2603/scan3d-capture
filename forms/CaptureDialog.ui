@@ -120,6 +120,12 @@
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
            <widget class="QLabel" name="camera_label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>Camera:</string>
             </property>
@@ -130,6 +136,12 @@
           </item>
           <item>
            <widget class="QLabel" name="camera_resolution_label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>image size</string>
             </property>
