@@ -57,6 +57,7 @@ public:
     inline Spinnaker::CameraPtr get_camera() const {return _spinnaker_camera;}
     inline bool is_spinnaker_camera(void) const {return _camera_name != "" && _camera_name.rfind("Spinnaker", 0) == 0;}
     void update_camera_parameters();
+    QStringList list_devices_spinnaker();
 #endif
 
     void setImageSize(size_t width, size_t height);

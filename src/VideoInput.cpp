@@ -527,6 +527,27 @@ bool VideoInput::configure_node(std::string nodeName, NodeType nodeType, std::st
     return false;
 }
 
+QStringList VideoInput::list_devices_spinnaker()
+{
+    QStringList list;
+    Spinnaker::CameraList cameraList = _spinnaker_system->GetCameras();
+
+    char deviceName[V4L2_MAX_DEVICE_DRIVER_NAME];
+
+    for (unsigned int i = 0; i < cameraList.GetSize(); i++)
+    {
+        Spinnaker::GenApi::CStringPtr ptrStringSerial = cameraList.GetByIndex(i)->GetTLDeviceNodeMap().GetNode("DeviceSerialNumber");
+        if (Spinnaker::GenApi::IsAvailable(ptrStringSerial) && Spinnaker::GenApi::IsReadable(ptrStringSerial))
+        {
+            sprintf(deviceName, "Spinnaker: %s", ptrStringSerial->GetValue().c_str());
+            list.append(deviceName);
+        }
+    }
+
+    cameraList.Clear();
+    return list;
+}
+
 #endif
 
 void VideoInput::waitForStart(void)
@@ -565,6 +586,9 @@ QStringList VideoInput::list_devices(void)
 #endif
 #ifdef Q_OS_LINUX
     list = list_devices_v4l2(silent);
+#endif
+#ifdef USE_SPINNAKER
+    list += list_devices_spinnaker();
 #endif
 
     return list;
@@ -988,23 +1012,6 @@ QStringList VideoInput::list_devices_v4l2(bool silent)
         /* Set up to test the next /dev/video source in line */
         CameraNumber++;
     } /* End while */
-
-#ifdef USE_SPINNAKER
-
-    Spinnaker::CameraList cameraList = _spinnaker_system->GetCameras();
-
-    for (unsigned int i = 0; i < cameraList.GetSize(); i++)
-    {
-        Spinnaker::GenApi::CStringPtr ptrStringSerial = cameraList.GetByIndex(i)->GetTLDeviceNodeMap().GetNode("DeviceSerialNumber");
-        if (Spinnaker::GenApi::IsAvailable(ptrStringSerial) && Spinnaker::GenApi::IsReadable(ptrStringSerial))
-        {
-            sprintf(deviceName, "Spinnaker: %s", ptrStringSerial->GetValue().c_str());
-            list.append(deviceName);
-        }
-    }
-
-    cameraList.Clear();
-#endif
 
     if (!silent) { fprintf(stderr, "v4l numCameras %d\n", list.length()); }
 
