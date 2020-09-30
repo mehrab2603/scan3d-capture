@@ -30,18 +30,19 @@ endif()
 # set possible library paths depending on the platform architecture.
 if(HAVE_64_BIT)
   set(CMAKE_LIB_ARCH_APPENDIX 64)
-  set(SPINNAKER_POSSIBLE_LIB_DIRS "lib64" "lib" "bin" "/usr/lib" "/usr/local/lib")
+  set(SPINNAKER_POSSIBLE_LIB_DIRS "lib64" "lib" "bin" "/usr/lib" "/usr/local/lib" "vs2015" "lib64/vs2015" "lib/vs2015")
   #message( STATUS "FOUND 64 BIT SYSTEM")
 else()
   set(CMAKE_LIB_ARCH_APPENDIX 32)
-  set(SPINNAKER_POSSIBLE_LIB_DIRS "lib" "bin" "/usr/lib" "/usr/local/lib")
+  set(SPINNAKER_POSSIBLE_LIB_DIRS "lib" "bin" "/usr/lib" "/usr/local/lib" "vs2015" "lib/vs2015")
   #message( STATUS "FOUND 32 BIT SYSTEM")
 endif()
 
 # FIND THE Spinnaker include path
 FIND_PATH(SPINNAKER_INCLUDE_DIRS Spinnaker.h
   # Windows:
-  "C:/Programme/Point Grey Research/FlyCapture2/include"
+  "C:/Program Files/FLIR Systems/Spinnaker/include"
+  "C:/Program Files (x86)/FLIR Systems/Spinnaker/include"
   "$ENV{VMLibraries_DIR}/extern/win${CMAKE_LIB_ARCH_APPENDIX}/include"
   # Linux
   "/usr/include/"
@@ -50,10 +51,11 @@ FIND_PATH(SPINNAKER_INCLUDE_DIRS Spinnaker.h
   "$ENV{VMLibraries_DIR}/extern/linux/include"
 )
 
-FIND_LIBRARY(SPINNAKER_LIBRARIES NAMES spinnaker Spinnaker
+FIND_LIBRARY(SPINNAKER_LIBRARIES NAMES spinnaker Spinnaker Spinnaker_v140
     PATHS 
     "/usr/lib${CMAKE_LIB_ARCH_APPENDIX}"
-    "C:/Programme/Point Grey Research/FlyCapture2"
+    "C:/Program Files/FLIR Systems/Spinnaker"
+    "C:/Program Files (x86)/FLIR Systems/Spinnaker"
     PATH_SUFFIXES ${SPINNAKER_POSSIBLE_LIB_DIRS}
 )
 
