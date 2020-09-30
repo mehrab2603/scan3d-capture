@@ -35,7 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <opencv2/highgui/highgui.hpp>
 
 #ifdef USE_SPINNAKER
-#   include "Spinnaker.h"
+#include "Spinnaker.h"
+#include "Application.hpp"
 #endif
 
 class VideoInput : public QThread
@@ -53,8 +54,9 @@ public:
 #ifdef USE_SPINNAKER
     inline void set_camera_name(std::string name) {_camera_name = name;}
     inline std::string get_camera_name(void) const {return _camera_name;}
+    inline Spinnaker::CameraPtr get_camera() const {return _spinnaker_camera;}
     inline bool is_spinnaker_camera(void) const {return _camera_name != "" && _camera_name.rfind("Spinnaker", 0) == 0;}
-    // std::shared_ptr<FlyCapture2::FC2Config> get_camera_config();
+    void update_camera_parameters();
 #endif
 
     void setImageSize(size_t width, size_t height);
@@ -88,6 +90,7 @@ private:
 
 #ifdef USE_SPINNAKER
     void configure_spinnaker_camera(int index, bool silent);
+    bool configure_node(std::string nodeName, NodeType nodeType, std::string value);
 #endif
 
 private:

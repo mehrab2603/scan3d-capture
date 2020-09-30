@@ -129,11 +129,21 @@ void VideoInput::run()
         }
         catch (Spinnaker::Exception& e)
         {
-            std::cerr << "Error captuing image: " << e.what() << std::endl;
-            error_count++;
+            if (_spinnaker_camera->IsStreaming())
+            {
+                std::cerr << "Error captuing image: " << e.what() << std::endl;
+                error_count++;
+            }
         }
-
-        if (pResultImage) pResultImage->Release();
+        
+        try
+        {
+            if (pResultImage) pResultImage->Release();
+        }
+        catch(Spinnaker::Exception& e)
+        {
+            std::cerr << "Error releasing image: " << e.what() << std::endl;
+        }
     }
 #endif
 
@@ -282,41 +292,232 @@ void VideoInput::configure_spinnaker_camera(int index, bool silent)
         // Initialize camera
         _spinnaker_camera->Init();
 
-        // Retrieve GenICam nodemap
-        Spinnaker::GenApi::INodeMap& nodeMap = _spinnaker_camera->GetNodeMap();
-
-        // Set up image acquisition
-        Spinnaker::GenApi::CEnumerationPtr ptrAcquisitionMode = nodeMap.GetNode("AcquisitionMode");
-
-        if (!Spinnaker::GenApi::IsAvailable(ptrAcquisitionMode) || !Spinnaker::GenApi::IsWritable(ptrAcquisitionMode))
-        {
-            std::cerr << "Error configuring Spinnaker camera: Unable to set acquisition mode to continuous (enum retrieval). Aborting..." << std::endl;
-            return;
-        }
-
-        // Retrieve entry node from enumeration node
-        Spinnaker::GenApi::CEnumEntryPtr ptrAcquisitionModeContinuous = ptrAcquisitionMode->GetEntryByName("Continuous");
-
-        if (!Spinnaker::GenApi::IsAvailable(ptrAcquisitionModeContinuous) || !Spinnaker::GenApi::IsReadable(ptrAcquisitionModeContinuous))
-        {
-            std::cerr << "Error configuring Spinnaker camera:  Unable to set acquisition mode to continuous (entry retrieval). Aborting..." << std::endl;
-            return;
-        }
-
-        // Retrieve integer value from entry node
-        const int64_t acquisitionModeContinuous = ptrAcquisitionModeContinuous->GetValue();
-
-        // Set integer value from entry node as new value of enumeration node
-        ptrAcquisitionMode->SetIntValue(acquisitionModeContinuous);
+        // Load parameters from settings
+        update_camera_parameters();
 
         // Start acquisition
         _spinnaker_camera->BeginAcquisition();
-        
     }
     catch (Spinnaker::Exception& e)
     {
         std::cerr << "Error configuring Spinnaker camera: " << e.what() << std::endl;
     }
+}
+
+void VideoInput::update_camera_parameters()
+{
+    if (_spinnaker_camera)
+    {
+        bool isStreaming = _spinnaker_camera->IsStreaming();
+        if (isStreaming) _spinnaker_camera->EndAcquisition();
+
+        QSettings & config = APP->config;
+
+        if (!configure_node("ExposureAuto", NodeType::Enum, "Off"))
+        {
+            std::cerr << "Error: Could not turn off camera Auto Exposure" << std::endl;
+        }
+
+        if (!configure_node("GainAuto", NodeType::Enum, "Off"))
+        {
+            std::cerr << "Error: Could not turn off camera Auto Gain" << std::endl;
+        }
+
+        if (!configure_node("BalanceWhiteAuto", NodeType::Enum, "Off"))
+        {
+            std::cerr << "Error: Could not turn off camera Auto White Balance" << std::endl;
+        }
+
+        if (!configure_node("AcquisitionMode", NodeType::Enum, "Continuous"))
+        {
+            std::cerr << "Error: Could not set camera Acquision Mode" << std::endl;
+            return;
+        }
+
+        if (!configure_node("BalanceRatioSelector", NodeType::Enum, "Red"))
+        {
+            std::cerr << "Error: Could not set camera Balance (Red)" << std::endl;
+        }
+        else
+        {
+            if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->BalanceRatio) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->BalanceRatio))
+            {
+                _spinnaker_camera->BalanceRatio.SetValue(config.value(CAMERA_BALANCE_RED_CONFIG, CAMERA_BALANCE_RED_DEFAULT).toDouble());   
+            }
+            else
+            {
+                std::cerr << "Error: Could not set camera Balance (Red)" << std::endl;
+            }
+        }
+
+        if (!configure_node("BalanceRatioSelector", NodeType::Enum, "Blue"))
+        {
+            std::cerr << "Error: Could not set camera Balance (Blue)" << std::endl;
+        }
+        else
+        {
+            if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->BalanceRatio) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->BalanceRatio))
+            {
+                _spinnaker_camera->BalanceRatio.SetValue(config.value(CAMERA_BALANCE_BLUE_CONFIG, CAMERA_BALANCE_BLUE_DEFAULT).toDouble());   
+            }
+            else
+            {
+                std::cerr << "Error: Could not set camera Balance (Blue)" << std::endl;
+            }
+        }
+
+        if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->Height) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->Height))
+        {
+            _spinnaker_camera->Height.SetValue(config.value(CAMERA_HEIGHT_CONFIG, CAMERA_HEIGHT_DEFAULT).toUInt());   
+        }
+        else
+        {
+            std::cerr << "Error: Could not set camera Height" << std::endl;
+        }
+
+        if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->Width) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->Width))
+        {
+            _spinnaker_camera->Width.SetValue(config.value(CAMERA_WIDTH_CONFIG, CAMERA_WIDTH_DEFAULT).toUInt());   
+        }
+        else
+        {
+            std::cerr << "Error: Could not set camera Width" << std::endl;
+        }
+
+        if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->OffsetX) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->OffsetX))
+        {
+            _spinnaker_camera->OffsetX.SetValue(config.value(CAMERA_OFFSET_X_CONFIG, CAMERA_OFFSET_X_DEFAULT).toUInt());   
+        }
+        else
+        {
+            std::cerr << "Error: Could not set camera X Offset" << std::endl;
+        }
+
+        if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->OffsetY) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->OffsetY))
+        {
+            _spinnaker_camera->OffsetY.SetValue(config.value(CAMERA_OFFSET_Y_CONFIG, CAMERA_OFFSET_Y_DEFAULT).toUInt());   
+        }
+        else
+        {
+            std::cerr << "Error: Could not set camera Y Offset" << std::endl;
+        }
+
+        if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->Gain) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->Gain))
+        {
+            _spinnaker_camera->Gain.SetValue(config.value(CAMERA_GAIN_CONFIG, CAMERA_GAIN_DEFAULT).toDouble());   
+        }
+        else
+        {
+            std::cerr << "Error: Could not set camera Gain" << std::endl;
+        }
+
+        if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->Gamma) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->Gamma))
+        {
+            _spinnaker_camera->Gamma.SetValue(config.value(CAMERA_GAMMA_CONFIG, CAMERA_GAMMA_DEFAULT).toDouble());   
+        }
+        else
+        {
+            std::cerr << "Error: Could not set camera Gamma" << std::endl;
+        }
+
+        if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->BlackLevel) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->BlackLevel))
+        {
+            _spinnaker_camera->BlackLevel.SetValue(config.value(CAMERA_BLACK_LEVEL_CONFIG, CAMERA_BLACK_LEVEL_DEFAULT).toDouble());   
+        }
+        else
+        {
+            std::cerr << "Error: Could not set camera Brightness" << std::endl;
+        }
+
+        if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->ExposureTime) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->ExposureTime))
+        {
+            double exposureValue = std::clamp(config.value(CAMERA_EXPOSURE_TIME_CONFIG, CAMERA_EXPOSURE_TIME_DEFAULT).toDouble(), _spinnaker_camera->ExposureTime.GetMin(), _spinnaker_camera->ExposureTime.GetMax());
+            config.setValue(CAMERA_EXPOSURE_TIME_CONFIG, exposureValue);
+
+            _spinnaker_camera->ExposureTime.SetValue(exposureValue);   
+        }
+        else
+        {
+            std::cerr << "Error: Could not set camera Exposure Time" << std::endl;
+        }
+
+        if (!configure_node("AcquisitionFrameRateEnable", NodeType::Bool, "true"))
+        {
+            std::cerr << "Error: Could not set camera Frame Rate" << std::endl;
+        }
+        else
+        {
+            if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->AcquisitionFrameRate) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->AcquisitionFrameRate))
+            {
+                double frameRateValue = std::clamp(config.value(CAMERA_FRAME_RATE_CONFIG, CAMERA_FRAME_RATE_DEFAULT).toDouble(), _spinnaker_camera->AcquisitionFrameRate.GetMin(), _spinnaker_camera->AcquisitionFrameRate.GetMax());
+                config.setValue(CAMERA_FRAME_RATE_CONFIG, frameRateValue);
+
+                _spinnaker_camera->AcquisitionFrameRate.SetValue(frameRateValue);   
+            }
+            else
+            {
+                std::cerr << "Error: Could not set camera Frame Rate" << std::endl;
+            }
+        }
+
+        if (isStreaming) _spinnaker_camera->BeginAcquisition();
+    }
+}
+
+bool VideoInput::configure_node(std::string nodeName, NodeType nodeType, std::string value)
+{
+    if (_spinnaker_camera)
+    {
+        Spinnaker::GenApi::INodeMap& nodeMap = _spinnaker_camera->GetNodeMap();
+
+        if (nodeType == NodeType::Enum)
+        {
+            Spinnaker::GenApi::CEnumerationPtr enumerationPtr = nodeMap.GetNode(nodeName.c_str());
+
+            if (!Spinnaker::GenApi::IsAvailable(enumerationPtr) || !Spinnaker::GenApi::IsWritable(enumerationPtr))
+            {
+                return false;
+            }
+            else
+            {
+                // Retrieve entry node from enumeration node
+                Spinnaker::GenApi::CEnumEntryPtr enumEntryPtr = enumerationPtr->GetEntryByName(value.c_str());
+
+                if (!Spinnaker::GenApi::IsAvailable(enumEntryPtr) || !Spinnaker::GenApi::IsReadable(enumEntryPtr))
+                {
+                    return false;
+                }
+                else
+                {
+                    // Retrieve integer value from entry node
+                    const int64_t valueCode = enumEntryPtr->GetValue();
+
+                    // Set integer value from entry node as new value of enumeration node
+                    enumerationPtr->SetIntValue(valueCode);
+
+                    return true;
+                }
+            }
+        }
+        else if (nodeType == NodeType::Bool)
+        {
+            Spinnaker::GenApi::CBooleanPtr booleanPtr = nodeMap.GetNode(nodeName.c_str());
+
+            if (!Spinnaker::GenApi::IsAvailable(booleanPtr) || !Spinnaker::GenApi::IsReadable(booleanPtr))
+            {
+                return false;
+            }
+
+            booleanPtr->SetValue(value == "true" ? true : false);
+            return true;
+        }
+    }
+    else
+    {
+        return false;
+    }
+
+    return false;
 }
 
 #endif

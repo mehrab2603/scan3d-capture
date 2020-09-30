@@ -8,5 +8,4 @@ Added functions
 - Integrate the Spinnaker SDK to increase camera support
 
 TODO
-- Add mechanism to allow configuring camera parameters
 - Add Windows support

@@ -50,6 +50,7 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE src forms ${OPENCV_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS} ${Qt5OpenGL_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${OPENGL_LIBRARIES} Qt5::OpenGL)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 if(WITH_SPINNAKER)
     find_package(Spinnaker REQUIRED)
