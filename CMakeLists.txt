@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 3.10.0)
 option(WITH_SPINNAKER "Use the Spinnaker SDK for increased camera support" OFF)
 
 set(OpenGL_GL_PREFERENCE "GLVND")
-set(OpenCV_DIR "" CACHE FILEPATH "Path to OpenCV 2")
-set(Spinnaker_DIR "" CACHE FILEPATH "Path to the Spinnaker SDK")
 set(PROJECT_NAME "scan3d-capture")
 
 project(${PROJECT_NAME})
@@ -16,7 +14,7 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS forms)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-find_package(OpenCV 2 COMPONENTS core imgproc highgui calib3d features2d flann REQUIRED PATHS ${OpenCV_DIR})
+find_package(OpenCV 2 COMPONENTS core imgproc highgui calib3d features2d flann REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Qt5 COMPONENTS OpenGL REQUIRED)
 
