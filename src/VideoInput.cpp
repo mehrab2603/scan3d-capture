@@ -218,8 +218,13 @@ bool VideoInput::start_camera(void)
 #ifdef USE_SPINNAKER
     }
 
-    configure_spinnaker_camera(index, silent);
-#else
+    if (is_spinnaker_camera())
+    {
+        configure_spinnaker_camera(index, silent);
+    }
+    else
+    {
+#endif
 #ifdef _MSC_VER
     configure_dshow(index,silent);
 #endif
@@ -229,6 +234,8 @@ bool VideoInput::start_camera(void)
 #ifdef Q_OS_LINUX
     configure_v4l2(index,silent);
 #endif
+#ifdef USE_SPINNAKER
+    }
 #endif
     return true;
 }
