@@ -603,9 +603,9 @@ QStringList VideoInput::list_device_resolutions(int index)
 #ifdef Q_OS_MAC
     list = list_device_resolutions_quicktime(index, silent);
 #endif
-// #ifdef Q_OS_LINUX
-//     list = list_device_resolutions_v4l2(index, silent);
-// #endif
+#ifdef Q_OS_LINUX
+    list = list_device_resolutions_v4l2(index, silent);
+#endif
 
     return list;
 }
@@ -1081,4 +1081,12 @@ void VideoInput::configure_v4l2(int index, bool silent)
     }
 
 #endif //Q_OS_LINUX
+}
+
+QStringList VideoInput::list_device_resolutions_v4l2(int index, bool silent)
+{
+    QStringList list;
+#ifdef Q_OS_LINUX
+#endif //Q_OS_LINUX
+    return list;
 }
