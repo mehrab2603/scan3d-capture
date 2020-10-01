@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <QFileInfo>
 
 #include <iostream>
-#include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/calib3d.hpp>
 
 CalibrationData::CalibrationData() :
     cam_K(), cam_kc(),

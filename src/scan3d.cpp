@@ -28,8 +28,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "scan3d.hpp"
 
 #include <iostream>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/calib3d.hpp>
 
 #include <QApplication>
 #include <QProgressDialog>

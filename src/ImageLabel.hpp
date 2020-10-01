@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <QWidget>
 #include <QMutex>
-#include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
 
 class ImageLabel : public QWidget
 {

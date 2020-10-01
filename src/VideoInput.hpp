@@ -31,8 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <QThread>
 #include <QStringList>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
 
 #ifdef USE_SPINNAKER
 #include "Spinnaker.h"
@@ -101,7 +101,7 @@ private:
     Spinnaker::SystemPtr _spinnaker_system;
     Spinnaker::CameraPtr _spinnaker_camera;
 #endif
-    CvCapture * _video_capture;
+    std::shared_ptr<cv::VideoCapture> _video_capture;
     volatile bool _init;
     volatile bool _stop;
 };

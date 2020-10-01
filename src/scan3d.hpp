@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <QWidget>
 #include <QString>
-#include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
 
 #ifndef _MSC_VER
 #  ifndef _isnan

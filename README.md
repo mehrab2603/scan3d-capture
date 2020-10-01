@@ -6,6 +6,7 @@ This software is modified from the 3D scanning software originally written by Da
 **Added functions**
 
 - Move to CMake build system
+- Move to OpenCV 3+
 - Integrate the Spinnaker SDK to increase camera support
 - Builtin Spinnaker-supported camera parameter control mechanism
 

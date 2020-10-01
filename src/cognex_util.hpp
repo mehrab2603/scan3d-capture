@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __COGNEX_UTIL_HPP__
 #define __COGNEX_UTIL_HPP__
 
-#include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
 
 namespace cognex
 {

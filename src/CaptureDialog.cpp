@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <QTime>
 
 #include <iostream>
-#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/imgproc.hpp>
 
 #include "Application.hpp"
 #include "im_util.hpp"

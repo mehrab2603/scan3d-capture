@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "AboutDialog.hpp"
 
-#include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
 
 AboutDialog::AboutDialog(QWidget * parent, Qt::WindowFlags flags): 
     QDialog(parent, flags)

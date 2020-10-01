@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __STRUCTURED_LIGHT_HPP__
 #define __STRUCTURED_LIGHT_HPP__
 
-#include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
 
 #ifndef _MSC_VER
 #  ifndef _isnan

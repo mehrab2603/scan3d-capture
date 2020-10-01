@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define __IO_UTIL_HPP__
 
 #include <QImage>
-#include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
 #include "scan3d.hpp"
 
 namespace io_util

@@ -149,11 +149,11 @@ void VideoInput::run()
 
     while(_video_capture && !_stop && error_count<max_error)
     {
-        IplImage * frame = cvQueryFrame(_video_capture);
-        if (frame)
+        cv::Mat frame;
+        if (_video_capture->read(frame))
         {   //ok
             error_count = 0;
-            emit new_image(cv::Mat(frame));
+            emit new_image(frame);
         }
         else
         {   //error
@@ -187,13 +187,13 @@ bool VideoInput::start_camera(void)
     bool silent = true;
 
 #ifdef _MSC_VER
-    int CLASS = CV_CAP_DSHOW;
+    int CLASS = cv::CAP_DSHOW;
 #endif
 #ifdef Q_OS_MAC
-    int CLASS = CV_CAP_QT;
+    int CLASS = cv::CAP_QT;
 #endif
 #ifdef Q_OS_LINUX
-    int CLASS = CV_CAP_V4L2;
+    int CLASS = cv::CAP_V4L2;
 #endif
 
 #ifdef USE_SPINNAKER
@@ -209,7 +209,7 @@ bool VideoInput::start_camera(void)
     {
 #endif
     //_video_capture = cvCaptureFromCAM(CLASS + index);
-    _video_capture = cvCreateCameraCapture(CLASS + index);
+    _video_capture = std::make_shared<cv::VideoCapture>(CLASS + index);
     if(!_video_capture)
     {
         std::cerr << "camera open failed, index=" << index << std::endl;
@@ -254,14 +254,14 @@ void VideoInput::stop_camera(bool force)
     if (_video_capture)
     {
 #ifndef Q_OS_MAC //HACK: do not close on mac because it hangs the application
-        cvReleaseCapture(&_video_capture);
-        _video_capture = NULL;
+        _video_capture->release();
+        _video_capture = nullptr;
 #endif
     }
     if (_video_capture && force)
     {   //close no matter what
-        cvReleaseCapture(&_video_capture);
-        _video_capture = NULL;
+        _video_capture->release();
+        _video_capture = nullptr;
     }
 }
 
@@ -567,8 +567,8 @@ void VideoInput::setImageSize(size_t width, size_t height)
 #endif
   if (_video_capture)
   {
-    cvSetCaptureProperty(_video_capture, CV_CAP_PROP_FRAME_WIDTH, width);
-    cvSetCaptureProperty(_video_capture, CV_CAP_PROP_FRAME_HEIGHT, height);
+    _video_capture->set(cv::CAP_PROP_FRAME_WIDTH, width);
+    _video_capture->set(cv::CAP_PROP_FRAME_HEIGHT, height);
     std::cerr << "setImageSize: " << width << "x" << height << std::endl;
   }
 }
@@ -760,8 +760,8 @@ void VideoInput::configure_dshow(int index, bool silent)
 
     if (pixCount)
     {
-        cvSetCaptureProperty(_video_capture, CV_CAP_PROP_FRAME_WIDTH, cols);
-        cvSetCaptureProperty(_video_capture, CV_CAP_PROP_FRAME_HEIGHT, rows);
+        _video_capture->set(cv::CAP_PROP_FRAME_WIDTH, cols);
+        _video_capture->set(cv::CAP_PROP_FRAME_HEIGHT, rows);
     }
 }
 
@@ -1076,8 +1076,8 @@ void VideoInput::configure_v4l2(int index, bool silent)
     {
         if (!silent) { fprintf(stderr, " *** v4l cam %d, selected size w=%d h=%d\n", CameraNumber, requestSize.width, requestSize.height); }
         
-        cvSetCaptureProperty(_video_capture, CV_CAP_PROP_FRAME_WIDTH, requestSize.width);
-        cvSetCaptureProperty(_video_capture, CV_CAP_PROP_FRAME_HEIGHT, requestSize.height);
+        _video_capture->set(cv::CAP_PROP_FRAME_WIDTH, requestSize.width);
+        _video_capture->set(cv::CAP_PROP_FRAME_HEIGHT, requestSize.height);
     }
 
 #endif //Q_OS_LINUX

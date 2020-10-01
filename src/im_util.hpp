@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __im_util_hpp__
 #define __im_util_hpp__
 
-#include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
 
 namespace im_util
 {

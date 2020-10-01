@@ -37,9 +37,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ctime>
 #include <cstdlib>
 
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/calib3d.hpp>
 
 #include "structured_light.hpp"
 
@@ -309,7 +309,7 @@ const cv::Mat Application::get_image(unsigned level, unsigned n, Role role) cons
         if (role==GrayImageRole)
         {
             cv::Mat gray_image;
-            cvtColor(rgb_image, gray_image, CV_BGR2GRAY);
+            cvtColor(rgb_image, gray_image, cv::COLOR_BGR2GRAY);
             return gray_image;
         }
     }
@@ -458,7 +458,7 @@ bool Application::extract_chessboard_corners(void)
             if (cam_corners.size())
             {
                 cv::cornerSubPix(gray_image, cam_corners, cv::Size(11, 11), cv::Size(-1, -1), 
-                                    cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
+                                    cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.1));
             }
         }
 
@@ -847,7 +847,7 @@ void Application::calibrate(void)
                         //out_pattern = pattern;
                     }
                 }
-                cv::Mat H = cv::findHomography(img_points, proj_points, CV_RANSAC);
+                cv::Mat H = cv::findHomography(img_points, proj_points, cv::RANSAC);
                 //std::cout << " H:\n" << H << std::endl;
                 cv::Point3d Q = cv::Point3d(cv::Mat(H*cv::Mat(cv::Point3d(p.x, p.y, 1.0))));
                 q = cv::Point2f(Q.x/Q.z, Q.y/Q.z);
@@ -1025,8 +1025,8 @@ void Application::calibrate(void)
     processing_message(" * Calibrate stereo");
     calib.stereo_error = cv::stereoCalibrate(world_corners_active, camera_corners_active, projector_corners_active, calib.cam_K, calib.cam_kc, calib.proj_K, calib.proj_kc, 
                                                 imageSize /*ignored*/, calib.R, calib.T, calib.E, calib.F, 
-                                                cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 150, DBL_EPSILON), 
-                                                cv::CALIB_FIX_INTRINSIC /*cv::CALIB_USE_INTRINSIC_GUESS*/ + cal_flags);
+                                                cv::CALIB_FIX_INTRINSIC /*cv::CALIB_USE_INTRINSIC_GUESS*/ + cal_flags, 
+                                                cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 150, DBL_EPSILON));
 
     //stereo rectification homography
     // cv::Mat F = cv::findFundamentalMat(camera_corners_active, projector_corners_active, cv::FM_RANSAC, 3, 0.99);
