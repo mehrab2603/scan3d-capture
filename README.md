@@ -21,9 +21,11 @@ This software is modified from the 3D scanning software originally written by Da
 In the root directory, create a directory named `build` and then inside this directory execute the following commands (assuming that the install directory is `/home/dummy_user/scan3d` and Spinnaker support is desired).
 
 ```
-cmake -DWITH_SPINNAKER=ON -DCMAKE_INSTALL_PREFIX=/home/dummy_user/scan3d ..
+cmake -DWITH_SPINNAKER=ON -DCMAKE_INSTALL_PREFIX=/home/dummy_user/scan3d -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
 ```
+
+You will need to add OpenCV to your `PATH` if it is not already.
 
 **Usage**
 

@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.10.0)
 option(WITH_SPINNAKER "Use the Spinnaker SDK for increased camera support" OFF)
 
 set(OpenGL_GL_PREFERENCE "GLVND")
+
 set(PROJECT_NAME "scan3d-capture")
 
 project(${PROJECT_NAME})
@@ -17,7 +18,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 find_package(OpenCV COMPONENTS core imgproc highgui calib3d features2d flann REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Qt5 COMPONENTS OpenGL REQUIRED)
-
 
 add_executable(${PROJECT_NAME}
     src/AboutDialog.cpp
@@ -64,6 +64,16 @@ if(WITH_SPINNAKER)
 
     MESSAGE(STATUS "Building with the Spinnaker SDK")
 endif()
+
+if(WIN32)
+    find_package(DirectShow COMPONENTS Strmiids Vfw32 Ole32 OleAut32 REQUIRED)
+
+    target_include_directories(${PROJECT_NAME} PRIVATE ${DirectShow_INCLUDE_DIR})
+    target_link_libraries(${PROJECT_NAME} ${DIRECTSHOW_LIBRARIES})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX _CRT_SECURE_NO_WARNINGS _SCL_SECURE_NO_WARNINGS _USE_MATH_DEFINES)
+    target_compile_options(${PROJECT_NAME} PRIVATE /MT)
+    target_link_options(${PROJECT_NAME} PRIVATE /INCREMENTAL:NO /NODEFAULTLIB:MSVCRT)
+endif(WIN32)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
