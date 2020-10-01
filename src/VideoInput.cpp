@@ -531,7 +531,7 @@ QStringList VideoInput::list_devices_spinnaker()
     QStringList list;
     Spinnaker::CameraList cameraList = _spinnaker_system->GetCameras();
 
-    char deviceName[V4L2_MAX_DEVICE_DRIVER_NAME];
+    char deviceName[255];
 
     for (unsigned int i = 0; i < cameraList.GetSize(); i++)
     {
