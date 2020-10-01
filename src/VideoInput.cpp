@@ -57,8 +57,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 VideoInput::VideoInput(QObject  * parent): 
     QThread(parent),
     _camera_index(-1),
-    _camera_name(""),
 #ifdef USE_SPINNAKER
+     _camera_name(""),
     _spinnaker_system(Spinnaker::System::GetInstance()),
     _spinnaker_camera(nullptr),
 #endif
@@ -248,6 +248,7 @@ void VideoInput::stop_camera(bool force)
         _spinnaker_camera->EndAcquisition();
         _spinnaker_camera->DeInit();
         _spinnaker_camera = nullptr;
+        _camera_name = "";
     }
 #endif
     if (_video_capture)
@@ -262,8 +263,6 @@ void VideoInput::stop_camera(bool force)
         cvReleaseCapture(&_video_capture);
         _video_capture = NULL;
     }
-
-    _camera_name = "";
 }
 
 #ifdef USE_SPINNAKER

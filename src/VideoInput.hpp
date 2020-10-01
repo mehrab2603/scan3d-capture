@@ -96,8 +96,8 @@ private:
 
 private:
     int _camera_index;
-    std::string _camera_name;
 #ifdef USE_SPINNAKER
+    std::string _camera_name;
     Spinnaker::SystemPtr _spinnaker_system;
     Spinnaker::CameraPtr _spinnaker_camera;
 #endif

@@ -219,9 +219,9 @@ bool CaptureDialog::start_camera(void)
     stop_camera();
 
     _video_input.set_camera_index(index);
-    _video_input.set_camera_name(camera_combo->currentText().toStdString());
 
 #ifdef USE_SPINNAKER
+    _video_input.set_camera_name(camera_combo->currentText().toStdString());
 
     if (_video_input.is_spinnaker_camera())
     {
