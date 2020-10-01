@@ -850,7 +850,11 @@ QStringList VideoInput::list_device_resolutions_dshow(int index, bool silent)
                 if (SUCCEEDED(hr))
                 {
                     TCHAR str[MAX_PIN_NAME];
-                    StringCchCopy(str, NUMELMS(str), pi.achName);
+
+                    std::wstring pinNameWideString(pi.achName);
+                    std::string pinNameString(pinNameWideString.begin(), pinNameWideString.end());
+
+                    StringCchCopy(str, NUMELMS(str), pinNameString.c_str());
                     printf(" Pin name %S\n", str);
                 }
                 if (pi.pFilter) { pi.pFilter->Release(); }
