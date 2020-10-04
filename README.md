@@ -12,6 +12,7 @@ This software is modified from the 3D scanning software originally written by Da
 
 **Requirements**
 
+- Qt 5
 - CMake 3.10.0+
 - OpenCV 3+
 - Spinnaker SDK 2.0.0.147 (optional)
