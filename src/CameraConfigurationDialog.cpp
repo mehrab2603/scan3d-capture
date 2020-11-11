@@ -70,31 +70,29 @@ void CameraConfigurationDialog::setup_slider_spin_pair(QSlider * slider, T2 * sp
 template<typename T>
 void CameraConfigurationDialog::apply_slider_spin_pair(QSlider * slider, QDoubleSpinBox * spin, T i, std::string config)
 {
+    double value;
+
     if (std::is_same<T, int>::value)
     {
         std::clamp((int)i, (int)slider->minimum(), (int)slider->maximum());
-        double value = std::clamp(i * (spin->maximum() / (double)slider->maximum()), spin->minimum(), spin->maximum());
-
-        APP->config.setValue(config.c_str(), value);
-        _video_input.update_camera_parameters();
-
-        spin->blockSignals(true);
-        spin->setValue(APP->config.value(config.c_str()).toDouble());
-        slider->setValue((double)slider->maximum() / spin->maximum() * APP->config.value(config.c_str()).toDouble());
-        spin->blockSignals(false);
+        value = std::clamp(i * (spin->maximum() / (double)slider->maximum()), spin->minimum(), spin->maximum());        
     }
     else if (std::is_same<T, double>::value)
     {
-        std::clamp((double)i, (double)spin->minimum(), (double)spin->maximum());
-
-        APP->config.setValue(config.c_str(), i);
-        _video_input.update_camera_parameters();
-
-        slider->blockSignals(true);
-        spin->setValue(APP->config.value(config.c_str()).toDouble());
-        slider->setValue((double)slider->maximum() / spin->maximum() * APP->config.value(config.c_str()).toDouble());
-        slider->blockSignals(false);
+        value = std::clamp((double)i, (double)spin->minimum(), (double)spin->maximum());
     }
+
+    APP->config.setValue(config.c_str(), value);
+    _video_input.update_camera_parameters();
+
+    spin->blockSignals(true);
+    slider->blockSignals(true);
+
+    spin->setValue(APP->config.value(config.c_str()).toDouble());
+    slider->setValue((double)slider->maximum() / spin->maximum() * APP->config.value(config.c_str()).toDouble());
+
+    slider->blockSignals(false);
+    spin->blockSignals(false);
 }
 
 void CameraConfigurationDialog::on_camera_height_spin_valueChanged(int i)
