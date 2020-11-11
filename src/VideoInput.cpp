@@ -342,6 +342,7 @@ void VideoInput::update_camera_parameters()
 
         if (!configure_node("BalanceRatioSelector", NodeType::Enum, "Red"))
         {
+            config.setValue(CAMERA_BALANCE_RED_CONFIG, CAMERA_BALANCE_RED_DEFAULT);
             std::cerr << "Error: Could not set camera Balance (Red)" << std::endl;
         }
         else
@@ -352,12 +353,14 @@ void VideoInput::update_camera_parameters()
             }
             else
             {
+                config.setValue(CAMERA_BALANCE_RED_CONFIG, CAMERA_BALANCE_RED_DEFAULT);
                 std::cerr << "Error: Could not set camera Balance (Red)" << std::endl;
             }
         }
 
         if (!configure_node("BalanceRatioSelector", NodeType::Enum, "Blue"))
         {
+            config.setValue(CAMERA_BALANCE_BLUE_CONFIG, CAMERA_BALANCE_BLUE_DEFAULT);
             std::cerr << "Error: Could not set camera Balance (Blue)" << std::endl;
         }
         else
@@ -368,6 +371,7 @@ void VideoInput::update_camera_parameters()
             }
             else
             {
+                config.setValue(CAMERA_BALANCE_BLUE_CONFIG, CAMERA_BALANCE_BLUE_DEFAULT);
                 std::cerr << "Error: Could not set camera Balance (Blue)" << std::endl;
             }
         }
@@ -378,6 +382,7 @@ void VideoInput::update_camera_parameters()
         }
         else
         {
+            config.setValue(CAMERA_HEIGHT_CONFIG, CAMERA_HEIGHT_DEFAULT);
             std::cerr << "Error: Could not set camera Height" << std::endl;
         }
 
@@ -387,6 +392,7 @@ void VideoInput::update_camera_parameters()
         }
         else
         {
+            config.setValue(CAMERA_WIDTH_CONFIG, CAMERA_WIDTH_DEFAULT);
             std::cerr << "Error: Could not set camera Width" << std::endl;
         }
 
@@ -396,6 +402,7 @@ void VideoInput::update_camera_parameters()
         }
         else
         {
+            config.setValue(CAMERA_OFFSET_X_CONFIG, CAMERA_OFFSET_X_DEFAULT);
             std::cerr << "Error: Could not set camera X Offset" << std::endl;
         }
 
@@ -405,6 +412,7 @@ void VideoInput::update_camera_parameters()
         }
         else
         {
+            config.setValue(CAMERA_OFFSET_Y_CONFIG, CAMERA_OFFSET_Y_DEFAULT);
             std::cerr << "Error: Could not set camera Y Offset" << std::endl;
         }
 
@@ -414,16 +422,8 @@ void VideoInput::update_camera_parameters()
         }
         else
         {
+            config.setValue(CAMERA_GAIN_CONFIG, CAMERA_GAIN_DEFAULT);
             std::cerr << "Error: Could not set camera Gain" << std::endl;
-        }
-
-        if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->Gamma) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->Gamma))
-        {
-            _spinnaker_camera->Gamma.SetValue(config.value(CAMERA_GAMMA_CONFIG, CAMERA_GAMMA_DEFAULT).toDouble());   
-        }
-        else
-        {
-            std::cerr << "Error: Could not set camera Gamma" << std::endl;
         }
 
         if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->BlackLevel) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->BlackLevel))
@@ -432,6 +432,7 @@ void VideoInput::update_camera_parameters()
         }
         else
         {
+            config.setValue(CAMERA_BLACK_LEVEL_CONFIG, CAMERA_BLACK_LEVEL_DEFAULT);
             std::cerr << "Error: Could not set camera Brightness" << std::endl;
         }
 
@@ -444,12 +445,14 @@ void VideoInput::update_camera_parameters()
         }
         else
         {
+            config.setValue(CAMERA_EXPOSURE_TIME_CONFIG, CAMERA_EXPOSURE_TIME_DEFAULT);
             std::cerr << "Error: Could not set camera Exposure Time" << std::endl;
         }
 
         if (!configure_node("AcquisitionFrameRateEnable", NodeType::Bool, "true"))
         {
-            std::cerr << "Error: Could not set camera Frame Rate" << std::endl;
+            config.setValue(CAMERA_FRAME_RATE_CONFIG, CAMERA_FRAME_RATE_DEFAULT);
+            std::cerr << "Error: Could not set camera Frame Rate Enable" << std::endl;
         }
         else
         {
@@ -462,7 +465,71 @@ void VideoInput::update_camera_parameters()
             }
             else
             {
+                config.setValue(CAMERA_FRAME_RATE_CONFIG, CAMERA_FRAME_RATE_DEFAULT);
                 std::cerr << "Error: Could not set camera Frame Rate" << std::endl;
+            }
+        }
+
+        if (!configure_node("GammaEnable", NodeType::Bool, "true"))
+        {
+            config.setValue(CAMERA_GAMMA_CONFIG, CAMERA_GAMMA_DEFAULT);
+            std::cerr << "Error: Could not set camera Gamma Enable" << std::endl;
+        }
+        else
+        {
+            if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->Gamma) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->Gamma))
+            {
+                double gammaValue = std::clamp(config.value(CAMERA_GAMMA_CONFIG, CAMERA_GAMMA_DEFAULT).toDouble(), _spinnaker_camera->Gamma.GetMin(), _spinnaker_camera->Gamma.GetMax());
+                config.setValue(CAMERA_GAMMA_CONFIG, gammaValue);
+
+                _spinnaker_camera->Gamma.SetValue(gammaValue);   
+            }
+            else
+            {
+                config.setValue(CAMERA_GAMMA_CONFIG, CAMERA_GAMMA_DEFAULT);
+                std::cerr << "Error: Could not set camera Gamma" << std::endl;
+            }
+        }
+
+        if (!configure_node("SaturationEnable", NodeType::Bool, "true"))
+        {
+            config.setValue(CAMERA_SATURATION_CONFIG, CAMERA_SATURATION_DEFAULT);
+            std::cerr << "Error: Could not set camera Saturation Enable" << std::endl;
+        }
+        else
+        {
+            if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->Saturation) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->Saturation))
+            {
+                double saturationValue = std::clamp(config.value(CAMERA_SATURATION_CONFIG, CAMERA_SATURATION_DEFAULT).toDouble(), _spinnaker_camera->Saturation.GetMin(), _spinnaker_camera->Saturation.GetMax());
+                config.setValue(CAMERA_SATURATION_CONFIG, saturationValue);
+
+                _spinnaker_camera->Saturation.SetValue(saturationValue);   
+            }
+            else
+            {
+                config.setValue(CAMERA_SATURATION_CONFIG, CAMERA_SATURATION_DEFAULT);
+                std::cerr << "Error: Could not set camera Sharpening" << std::endl;
+            }
+        }
+
+        if (!configure_node("SharpeningEnable", NodeType::Bool, "true"))
+        {
+            config.setValue(CAMERA_SHARPNESS_CONFIG, CAMERA_SHARPNESS_DEFAULT);
+            std::cerr << "Error: Could not set camera Sharpening Enable" << std::endl;
+        }
+        else
+        {
+            if (Spinnaker::GenApi::IsReadable(_spinnaker_camera->Sharpening) && Spinnaker::GenApi::IsWritable(_spinnaker_camera->Sharpening))
+            {
+                double sharpeningValue = std::clamp(config.value(CAMERA_SHARPNESS_CONFIG, CAMERA_SHARPNESS_DEFAULT).toDouble(), _spinnaker_camera->Sharpening.GetMin(), _spinnaker_camera->Sharpening.GetMax());
+                config.setValue(CAMERA_SHARPNESS_CONFIG, sharpeningValue);
+
+                _spinnaker_camera->Sharpening.SetValue(sharpeningValue);   
+            }
+            else
+            {
+                config.setValue(CAMERA_SHARPNESS_CONFIG, CAMERA_SHARPNESS_DEFAULT);
+                std::cerr << "Error: Could not set camera Sharpening" << std::endl;
             }
         }
 

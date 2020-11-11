@@ -58,8 +58,8 @@ enum Role {ImageFilenameRole = Qt::UserRole, GrayImageRole, ColorImageRole,
 enum NodeType {Enum, Bool};
 
 //camera
-#define CAMERA_FRAME_RATE_CONFIG      "spinnaker/camera_frame_rate"
-#define CAMERA_FRAME_RATE_DEFAULT     10
+#define CAMERA_FRAME_RATE_CONFIG     "spinnaker/camera_frame_rate"
+#define CAMERA_FRAME_RATE_DEFAULT    10
 #define CAMERA_OFFSET_X_CONFIG       "spinnaker/camera_offset_x"
 #define CAMERA_OFFSET_X_DEFAULT      0
 #define CAMERA_OFFSET_Y_CONFIG       "spinnaker/camera_offset_y"
@@ -70,6 +70,10 @@ enum NodeType {Enum, Bool};
 #define CAMERA_WIDTH_DEFAULT         1024
 #define CAMERA_GAIN_CONFIG           "spinnaker/camera_gain"
 #define CAMERA_GAIN_DEFAULT          0.0
+#define CAMERA_HUE_CONFIG            "spinnaker/camera_hue"
+#define CAMERA_HUE_DEFAULT           1.0
+#define CAMERA_SATURATION_CONFIG     "spinnaker/camera_saturation"
+#define CAMERA_SATURATION_DEFAULT    100.0
 #define CAMERA_GAMMA_CONFIG          "spinnaker/camera_gamma"
 #define CAMERA_GAMMA_DEFAULT         1.0
 #define CAMERA_BLACK_LEVEL_CONFIG    "spinnaker/camera_black_level"
@@ -80,6 +84,8 @@ enum NodeType {Enum, Bool};
 #define CAMERA_BALANCE_RED_DEFAULT   1.0
 #define CAMERA_BALANCE_BLUE_CONFIG   "spinnaker/camera_balance_blue"
 #define CAMERA_BALANCE_BLUE_DEFAULT  1.0
+#define CAMERA_SHARPNESS_CONFIG      "spinnaker/camera_sharpness"
+#define CAMERA_SHARPNESS_DEFAULT     1.0
 #endif
 
 #define WINDOW_TITLE "3D Scanning Software"

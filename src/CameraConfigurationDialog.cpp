@@ -13,7 +13,7 @@ CameraConfigurationDialog::CameraConfigurationDialog(VideoInput & _video_input, 
         return;
     }
 
-    update_ui();
+    update_ui(true);
 }
 
 CameraConfigurationDialog::~CameraConfigurationDialog()
@@ -21,12 +21,16 @@ CameraConfigurationDialog::~CameraConfigurationDialog()
 
 }
 
-void CameraConfigurationDialog::update_ui()
+void CameraConfigurationDialog::update_ui(bool update_resolution_spins)
 {
     Spinnaker::CameraPtr camera = _video_input.get_camera();
 
-    setup_slider_spin_pair<int, QSpinBox>(nullptr, camera_height_spin, CAMERA_HEIGHT_CONFIG, CAMERA_HEIGHT_DEFAULT, camera->Height.GetMin(), camera->Height.GetMax(), 0);
-    setup_slider_spin_pair<int, QSpinBox>(nullptr, camera_width_spin, CAMERA_WIDTH_CONFIG, CAMERA_WIDTH_DEFAULT, camera->Width.GetMin(), camera->Width.GetMax(), 0);
+    if (update_resolution_spins)
+    {
+        setup_slider_spin_pair<int, QSpinBox>(nullptr, camera_height_spin, CAMERA_HEIGHT_CONFIG, CAMERA_HEIGHT_DEFAULT, camera->Height.GetMin(), camera->Height.GetMax(), 0);
+        setup_slider_spin_pair<int, QSpinBox>(nullptr, camera_width_spin, CAMERA_WIDTH_CONFIG, CAMERA_WIDTH_DEFAULT, camera->Width.GetMin(), camera->Width.GetMax(), 0);
+    }
+
     setup_slider_spin_pair<int, QSpinBox>(nullptr, camera_offset_x_spin, CAMERA_OFFSET_X_CONFIG, CAMERA_OFFSET_X_DEFAULT, camera->OffsetX.GetMin(), camera->OffsetX.GetMax(), 0);
     setup_slider_spin_pair<int, QSpinBox>(nullptr, camera_offset_y_spin, CAMERA_OFFSET_Y_CONFIG, CAMERA_OFFSET_Y_DEFAULT, camera->OffsetY.GetMin(), camera->OffsetY.GetMax(), 0);
 
@@ -36,6 +40,9 @@ void CameraConfigurationDialog::update_ui()
     setup_slider_spin_pair<double, QDoubleSpinBox>(camera_balance_red_slider, camera_balance_red_spin, CAMERA_BALANCE_RED_CONFIG, CAMERA_BALANCE_RED_DEFAULT, camera->BalanceRatio.GetMin(), camera->BalanceRatio.GetMax(), 0.0);
     setup_slider_spin_pair<double, QDoubleSpinBox>(camera_balance_blue_slider, camera_balance_blue_spin, CAMERA_BALANCE_BLUE_CONFIG, CAMERA_BALANCE_BLUE_DEFAULT, camera->BalanceRatio.GetMin(), camera->BalanceRatio.GetMax(), 0.0);
     setup_slider_spin_pair<double, QDoubleSpinBox>(camera_frame_rate_slider, camera_frame_rate_spin, CAMERA_FRAME_RATE_CONFIG, CAMERA_FRAME_RATE_DEFAULT, camera->AcquisitionFrameRate.GetMin(), camera->AcquisitionFrameRate.GetMax(), 0.0);
+    setup_slider_spin_pair<double, QDoubleSpinBox>(camera_gamma_slider, camera_gamma_spin, CAMERA_GAMMA_CONFIG, CAMERA_GAMMA_DEFAULT, camera->Gamma.GetMin(), camera->Gamma.GetMax(), 0.0);
+    setup_slider_spin_pair<double, QDoubleSpinBox>(camera_saturation_slider, camera_saturation_spin, CAMERA_SATURATION_CONFIG, CAMERA_SATURATION_DEFAULT, camera->Saturation.GetMin(), camera->Saturation.GetMax(), 0.0);
+    // setup_slider_spin_pair<double, QDoubleSpinBox>(camera_sharpness_slider, camera_sharpness_spin, CAMERA_SHARPNESS_CONFIG, CAMERA_SHARPNESS_DEFAULT, camera->Sharpening.GetMin(), camera->Sharpening.GetMax(), 0.0);
 }
 
 template<typename T1, typename T2>
@@ -68,23 +75,25 @@ void CameraConfigurationDialog::apply_slider_spin_pair(QSlider * slider, QDouble
         std::clamp((int)i, (int)slider->minimum(), (int)slider->maximum());
         double value = std::clamp(i * (spin->maximum() / (double)slider->maximum()), spin->minimum(), spin->maximum());
 
-        spin->blockSignals(true);
-        spin->setValue(value);
-        spin->blockSignals(false);
-
         APP->config.setValue(config.c_str(), value);
         _video_input.update_camera_parameters();
+
+        spin->blockSignals(true);
+        spin->setValue(APP->config.value(config.c_str()).toDouble());
+        slider->setValue((double)slider->maximum() / spin->maximum() * APP->config.value(config.c_str()).toDouble());
+        spin->blockSignals(false);
     }
     else if (std::is_same<T, double>::value)
     {
         std::clamp((double)i, (double)spin->minimum(), (double)spin->maximum());
 
-        slider->blockSignals(true);
-        slider->setValue((double)slider->maximum() / spin->maximum() * i);
-        slider->blockSignals(false);
-
         APP->config.setValue(config.c_str(), i);
         _video_input.update_camera_parameters();
+
+        slider->blockSignals(true);
+        spin->setValue(APP->config.value(config.c_str()).toDouble());
+        slider->setValue((double)slider->maximum() / spin->maximum() * APP->config.value(config.c_str()).toDouble());
+        slider->blockSignals(false);
     }
 }
 
@@ -96,7 +105,7 @@ void CameraConfigurationDialog::on_camera_height_spin_valueChanged(int i)
     APP->config.setValue(CAMERA_HEIGHT_CONFIG, i);
     _video_input.update_camera_parameters();
 
-    update_ui();
+    update_ui(false);
 }
 
 void CameraConfigurationDialog::on_camera_width_spin_valueChanged(int i)
@@ -107,7 +116,7 @@ void CameraConfigurationDialog::on_camera_width_spin_valueChanged(int i)
     APP->config.setValue(CAMERA_WIDTH_CONFIG, i);
     _video_input.update_camera_parameters();
 
-    update_ui();
+    update_ui(false);
 }
 
 void CameraConfigurationDialog::on_camera_offset_x_spin_valueChanged(int i)
@@ -186,4 +195,44 @@ void CameraConfigurationDialog::on_camera_frame_rate_slider_valueChanged(int i)
 void CameraConfigurationDialog::on_camera_frame_rate_spin_valueChanged(double i)
 {
     apply_slider_spin_pair<double>(camera_frame_rate_slider, camera_frame_rate_spin, i, CAMERA_FRAME_RATE_CONFIG);
+}
+
+void CameraConfigurationDialog::on_camera_sharpness_slider_valueChanged(int i)
+{
+    apply_slider_spin_pair<int>(camera_sharpness_slider, camera_sharpness_spin, i, CAMERA_SHARPNESS_CONFIG);
+}
+
+void CameraConfigurationDialog::on_camera_sharpness_spin_valueChanged(double i)
+{
+    apply_slider_spin_pair<double>(camera_sharpness_slider, camera_sharpness_spin, i, CAMERA_SHARPNESS_CONFIG);
+}
+
+void CameraConfigurationDialog::on_camera_hue_slider_valueChanged(int i)
+{
+    apply_slider_spin_pair<int>(camera_hue_slider, camera_hue_spin, i, CAMERA_HUE_CONFIG);
+}
+
+void CameraConfigurationDialog::on_camera_hue_spin_valueChanged(double i)
+{
+    apply_slider_spin_pair<double>(camera_hue_slider, camera_hue_spin, i, CAMERA_HUE_CONFIG);
+}
+
+void CameraConfigurationDialog::on_camera_saturation_slider_valueChanged(int i)
+{
+    apply_slider_spin_pair<int>(camera_saturation_slider, camera_saturation_spin, i, CAMERA_SATURATION_CONFIG);
+}
+
+void CameraConfigurationDialog::on_camera_saturation_spin_valueChanged(double i)
+{
+    apply_slider_spin_pair<double>(camera_saturation_slider, camera_saturation_spin, i, CAMERA_SATURATION_CONFIG);
+}
+
+void CameraConfigurationDialog::on_camera_gamma_slider_valueChanged(int i)
+{
+    apply_slider_spin_pair<int>(camera_gamma_slider, camera_gamma_spin, i, CAMERA_GAMMA_CONFIG);
+}
+
+void CameraConfigurationDialog::on_camera_gamma_spin_valueChanged(double i)
+{
+    apply_slider_spin_pair<double>(camera_gamma_slider, camera_gamma_spin, i, CAMERA_GAMMA_CONFIG);
 }

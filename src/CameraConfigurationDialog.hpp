@@ -33,8 +33,16 @@ public slots:
     void on_camera_balance_blue_spin_valueChanged(double i);
     void on_camera_frame_rate_slider_valueChanged(int i);
     void on_camera_frame_rate_spin_valueChanged(double i);
+    void on_camera_sharpness_slider_valueChanged(int i);
+    void on_camera_sharpness_spin_valueChanged(double i);
+    void on_camera_hue_slider_valueChanged(int i);
+    void on_camera_hue_spin_valueChanged(double i);
+    void on_camera_saturation_slider_valueChanged(int i);
+    void on_camera_saturation_spin_valueChanged(double i);
+    void on_camera_gamma_slider_valueChanged(int i);
+    void on_camera_gamma_spin_valueChanged(double i);
 private:
-    void update_ui();
+    void update_ui(bool update_resolution_spins);
     template<typename T1, typename T2>
     void setup_slider_spin_pair(QSlider * slider, T2 * spin, std::string configString, T1 defaultValue, T1 minValue, T1 maxValue, double maxOffset=0.1);
     template<typename T>
