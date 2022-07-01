@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <string.h>
 
+#pragma comment(lib, "strmiids.lib")
+
 int main(int argc, char *argv[])
 {
     Application app(argc, argv);
