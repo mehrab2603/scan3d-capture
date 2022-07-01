@@ -13,9 +13,35 @@ This software is modified from the 3D scanning software originally written by Da
 **Requirements**
 
 - Qt 5
+
+	Download Qt 5 
+	https://www.qt.io/download-qt-installer
+	Select "Custom Install"
+	Select "Archive" and Search
+	Find Qt 5.15 and Install full Package. Will take a long time! > 1 hour to install
+	 
 - CMake 3.10.0+
+
+	Install CMake
+	https://cmake.org/download/
+	Get Windows x64 Installer
+	Add to path
+
 - OpenCV 3+
+
+	Install OpenCV 3 (e.g. OpenCV 3.4.16)
+	https://opencv.org/releases/
+	Use Windows Installer
+
+- Visual Studio 2017
+	Install Visual Studo 2017 64b (to pair with Qt 5.15)
+	https://my.visualstudio.com/Downloads
+	Install with Desktop Development with C++
+
+
 - Spinnaker SDK 2.0.0.147 (optional)
+
+
 
 **Installation**
 
@@ -26,7 +52,11 @@ cmake -DWITH_SPINNAKER=ON -DCMAKE_BUILD_TYPE=Release ..
 cmake --build .
 ```
 
+Be sure to build in Release mode
+
 You will need to add OpenCV to your `PATH` if it is not already.
+e.g.
+C:\dev\opencv_3.4.16_install\opencv\build\x64\vc15\bin
 
 **Usage**
 
