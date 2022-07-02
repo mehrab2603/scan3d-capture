@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10.0)
 
 option(WITH_SPINNAKER "Use the Spinnaker SDK for increased camera support" OFF)
+option(WITH_PHOTONEO "Use the Photoneo API for increased camera support" OFF)
 
 set(OpenGL_GL_PREFERENCE "GLVND")
 
@@ -63,6 +64,21 @@ if(WITH_SPINNAKER)
     )
 
     MESSAGE(STATUS "Building with the Spinnaker SDK")
+endif()
+
+# Photoneo Support
+if(WITH_PHOTONEO)
+	if (NOT PHO_API_CMAKE_CONFIG_PATH)
+		set(PHO_API_CMAKE_CONFIG_PATH "$ENV{PHOXI_CONTROL_PATH}")
+	endif()
+	string(REPLACE "\\" "/" PHO_API_CMAKE_CONFIG_PATH_ESCAPED ${PHO_API_CMAKE_CONFIG_PATH})
+	find_package(PhoXi REQUIRED CONFIG PATHS "${PHO_API_CMAKE_CONFIG_PATH_ESCAPED}")
+
+    target_include_directories(${PROJECT_NAME} PRIVATE ${PHOXI_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} ${PHOXI_LIBRARY})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_PHOTONEO)
+
+    MESSAGE(STATUS "Building with the Photoneo API")
 endif()
 
 if(WIN32)

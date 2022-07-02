@@ -229,6 +229,16 @@ bool CaptureDialog::start_camera(void)
     }
 
 #endif
+#ifdef USE_PHOTONEO
+    _video_input.set_camera_name(camera_combo->currentText().toStdString());
+
+	// TODO: Set up Photoneo Camera Configuration via GUI
+    // if (_video_input.is_photoneo_camera())
+    // {
+    //     camera_configuration_button->setVisible(true);
+    // }
+
+#endif
 
     if (!_video_input.isRunning())
     {

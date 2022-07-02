@@ -38,6 +38,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Spinnaker.h"
 #include "Application.hpp"
 #endif
+// Photoneo Support: Add Photoneo Header Files
+#ifdef USE_PHOTONEO
+#include "PhoXi.h"
+#endif
 
 class VideoInput : public QThread
 {
@@ -58,6 +62,18 @@ public:
     inline bool is_spinnaker_camera(void) const {return _camera_name != "" && _camera_name.rfind("Spinnaker", 0) == 0;}
     void update_camera_parameters();
     QStringList list_devices_spinnaker();
+#endif
+// Photoneo Support: Add Photoneo public methods - add a name to it?
+#ifdef USE_PHOTONEO
+    inline void set_camera_name(std::string name) {_camera_name = name;}
+    inline std::string get_camera_name(void) const {return _camera_name;}
+	// TODO: What to do with this?
+    //inline Spinnaker::CameraPtr get_camera() const {return _photoneo_camera;}
+	// TODO: Do we need more than _camera_name not empty?
+	inline bool is_photoneo_camera(void) const { return _camera_name != "" && _camera_name.rfind("Photoneo", 0) == 0; }
+	// TODO: Support updating camera parameters
+    // void update_camera_parameters();
+    QStringList list_devices_photoneo();
 #endif
 
     void setImageSize(size_t width, size_t height);
@@ -93,6 +109,10 @@ private:
     void configure_spinnaker_camera(int index, bool silent);
     bool configure_node(std::string nodeName, NodeType nodeType, std::string value);
 #endif
+// Photoneo Support: Add Photoneo private methods
+#ifdef USE_PHOTONEO
+    void configure_photoneo_camera(int index, bool silent);
+#endif
 
 private:
     int _camera_index;
@@ -100,6 +120,12 @@ private:
     std::string _camera_name;
     Spinnaker::SystemPtr _spinnaker_system;
     Spinnaker::CameraPtr _spinnaker_camera;
+#endif
+// Photoneo Support: Add Photoneo private members
+#ifdef USE_PHOTONEO
+    std::string _camera_name;
+	pho::api::PhoXiFactory _photoneo_system;
+	pho::api::PPhoXi _photoneo_camera;
 #endif
     std::shared_ptr<cv::VideoCapture> _video_capture;
     volatile bool _init;

@@ -54,6 +54,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <iostream>
 
+#include <opencv2/imgproc/imgproc.hpp>
+
 VideoInput::VideoInput(QObject  * parent): 
     QThread(parent),
     _camera_index(-1),
@@ -61,6 +63,11 @@ VideoInput::VideoInput(QObject  * parent):
      _camera_name(""),
     _spinnaker_system(Spinnaker::System::GetInstance()),
     _spinnaker_camera(nullptr),
+#endif
+// Photoneo Support: Initialize Photoneo members / globals
+#ifdef USE_PHOTONEO
+    _camera_name(""),
+    _photoneo_camera(nullptr),
 #endif
     _video_capture(NULL),
     _init(false),
@@ -75,6 +82,13 @@ VideoInput::~VideoInput()
 
 #ifdef USE_SPINNAKER
     _spinnaker_system->ReleaseInstance();
+#endif
+// Photoneo Support: Teardown Photoneo connection
+#ifdef USE_PHOTONEO
+	// only disconnect the camera if it connected!
+	if (_photoneo_camera) {
+		_photoneo_camera->Disconnect();
+	}
 #endif
 }
 
@@ -146,6 +160,50 @@ void VideoInput::run()
         }
     }
 #endif
+// Photoneo Support: Get images from the Photoneo sensor
+#ifdef USE_PHOTONEO
+	// TODO: Capture in 2D Image mode only?
+    while(_photoneo_camera && !_stop && error_count<max_error)
+    {
+
+		int FrameID = _photoneo_camera->TriggerFrame();
+		if (FrameID < 0)
+		{
+			// if negative number is returned, trigger was unsuccessful
+			std::cout << "Trigger was unsuccessful! code=" << FrameID << std::endl;
+		}
+		else
+		{
+			std::cout << "Frame was triggered, Frame Id: " << FrameID << std::endl;
+		}
+
+		pho::api::PFrame Frame = _photoneo_camera->GetSpecificFrame(FrameID, pho::api::PhoXiTimeout::Infinity);
+
+		if (Frame)
+		{
+			std::cout << "Frame Retrieval Succesful" << std::endl;
+		}
+		else
+		{
+			std::cout << "Failed to retrieve the frame!" << std::endl;
+		}
+
+		int image_height = Frame->Texture.GetDimension(0);
+		int image_width = Frame->Texture.GetDimension(1);
+		// Frame-> Texture is a 32b Float that encodes intensity (1 channel only)
+		cv::Mat Image = cv::Mat(image_height, image_width, CV_32FC1, Frame->Texture.GetDataPtr());
+		// You can't use convertTo to change number of channels, so you need to first use cvt::Color
+		// to go from 1 to 3 channels
+		cv::cvtColor(Image, Image, CV_GRAY2RGB);
+		// you need minimum and maximum values to normalize when converting to 8UC3
+		double minVal;
+		double maxVal;
+		cv::minMaxLoc(Image, &minVal, &maxVal);
+		// convert to 8UC3 with proper normalization - 8UC3 allows display by the camera preview
+		Image.convertTo(Image, CV_8UC3, 255.0 / (maxVal - minVal), -255.0 * minVal / (maxVal - minVal));
+        emit new_image(Image);
+    }
+#endif
 
     while(_video_capture && !_stop && error_count<max_error)
     {
@@ -176,6 +234,9 @@ bool VideoInput::start_camera(void)
 
 #ifdef USE_SPINNAKER
     if (_spinnaker_camera || _video_capture)
+#elif USE_PHOTONEO
+// Photoneo Support: check if Photoneo camera or video capture initialized
+    if (_photoneo_camera || _video_capture)
 #else
     if (_video_capture)
 #endif
@@ -208,6 +269,55 @@ bool VideoInput::start_camera(void)
     else
     {
 #endif
+// Photoneo Support: If camera is a photoneo camera, assign to photoneo camera object. This has an else clause down below
+#ifdef USE_PHOTONEO
+    if (is_photoneo_camera())
+    {
+		//Check if the PhoXi Control Software is running
+		if (!_photoneo_system.isPhoXiControlRunning())
+		{
+			std::cout << "PhoXi Control Software is not running" << std::endl;
+			throw "PhoXi Control Software is not running";
+		}
+
+		//Get List of available devices on the network
+		std::vector <pho::api::PhoXiDeviceInformation> DeviceList = _photoneo_system.GetDeviceList();
+		if (DeviceList.empty())
+		{
+			std::cout << "PhoXi Factory has found 0 devices" << std::endl;
+			throw "PhoXi Factory has found 0 devices";
+		}
+
+		//Try to connect device opened in PhoXi Control, if any
+		_photoneo_camera = _photoneo_system.CreateAndConnectFirstAttached();
+		if (_photoneo_camera)
+		{
+			std::cout << "You have already PhoXi device opened in PhoXi Control, the API Example is connected to device: "
+				<< (std::string) _photoneo_camera->HardwareIdentification << std::endl;
+		}
+		else
+		{
+			std::cout << "You have no PhoXi device opened in PhoXi Control, the API Example will try to connect to last device in device list" << std::endl;
+			_photoneo_camera = _photoneo_system.CreateAndConnect(DeviceList.back().HWIdentification);
+		}
+
+		//Check if device was created
+		if (!_photoneo_camera)
+		{
+			std::cout << "Your device was not created!" << std::endl;
+			throw "Your device was not created!";
+		}
+
+		//Check if device is connected
+		if (!(_photoneo_camera->isConnected()))
+		{
+			std::cout << "Your device is not connected" << std::endl;
+			throw "Your device is not connected";
+		}
+    }
+    else
+    {
+#endif
     //_video_capture = cvCaptureFromCAM(CLASS + index);
     _video_capture = std::make_shared<cv::VideoCapture>(CLASS + index);
     if(!_video_capture)
@@ -225,6 +335,17 @@ bool VideoInput::start_camera(void)
     else
     {
 #endif
+// Photoneo Support: End the else statement to open the Photoneo, configure it here
+#ifdef USE_PHOTONEO
+    }
+
+    if (is_photoneo_camera())
+    {
+        configure_photoneo_camera(index, silent);
+    }
+    else
+    {
+#endif
 #ifdef _MSC_VER
     configure_dshow(index,silent);
 #endif
@@ -235,6 +356,10 @@ bool VideoInput::start_camera(void)
     configure_v4l2(index,silent);
 #endif
 #ifdef USE_SPINNAKER
+    }
+#endif
+// Photoneo Support: End the other else statement to catch the photoneo config clause
+#ifdef USE_PHOTONEO
     }
 #endif
     return true;
@@ -248,6 +373,15 @@ void VideoInput::stop_camera(bool force)
         _spinnaker_camera->EndAcquisition();
         _spinnaker_camera->DeInit();
         _spinnaker_camera = nullptr;
+        _camera_name = "";
+    }
+#endif
+// Photoneo Support: Stop the Photoneo camera acquisiition, tear it down
+#ifdef USE_PHOTONEO
+    if (_photoneo_camera)
+    {
+		_photoneo_camera->StopAcquisition();
+        _photoneo_camera = (const pho::api::PPhoXi) nullptr;
         _camera_name = "";
     }
 #endif
@@ -265,6 +399,7 @@ void VideoInput::stop_camera(bool force)
     }
 }
 
+// TODO: Confgirue the Photoneo CAmera - seems like the place to actually set it up, also add it to the camera list
 #ifdef USE_SPINNAKER
 
 void VideoInput::configure_spinnaker_camera(int index, bool silent)
@@ -615,6 +750,48 @@ QStringList VideoInput::list_devices_spinnaker()
 }
 
 #endif
+// Photoneo Support: Camera Configuration, Make Camera Appear in List
+// TODO: Support updating camera parameters
+#ifdef USE_PHOTONEO
+void VideoInput::configure_photoneo_camera(int index, bool silent)
+{
+        // Initialize camera
+		if (_photoneo_camera->isAcquiring())
+		{
+			//Stop acquisition to change trigger mode
+			_photoneo_camera->StopAcquisition();
+		}
+
+		_photoneo_camera->TriggerMode = pho::api::PhoXiTriggerMode::Software;
+		std::cout << "Software trigger mode was set" << std::endl;
+		_photoneo_camera->ClearBuffer();
+		std::cout << "Buffer Cleared" << std::endl;
+		_photoneo_camera->StartAcquisition();
+		std::cout << "Acqusition Started" << std::endl;
+		if (!_photoneo_camera->isAcquiring())
+		{
+			std::cout << "Your device could not start acquisition!" << std::endl;
+			throw "Your device could not start acquisition!";
+		}
+}
+
+QStringList VideoInput::list_devices_photoneo()
+{
+    QStringList list;
+	std::vector <pho::api::PhoXiDeviceInformation> DeviceList = _photoneo_system.GetDeviceList();
+
+    char deviceName[255];
+
+    for (unsigned int i = 0; i < DeviceList.size(); i++)
+    {
+        sprintf(deviceName, "Photoneo: %s", DeviceList[i].Name);
+        list.append(deviceName);
+    }
+
+    return list;
+}
+
+#endif
 
 void VideoInput::waitForStart(void)
 {
@@ -628,6 +805,13 @@ void VideoInput::setImageSize(size_t width, size_t height)
 {
 #ifdef USE_SPINNAKER
   if (_spinnaker_camera)
+  {
+      //TODO: implementation
+  }
+#endif
+// Photoneo Support: Set image size for Photoneo - likely not needed?
+#ifdef USE_PHOTONEO
+  if (_photoneo_camera)
   {
       //TODO: implementation
   }
@@ -655,6 +839,10 @@ QStringList VideoInput::list_devices(void)
 #endif
 #ifdef USE_SPINNAKER
     list += list_devices_spinnaker();
+#endif
+// Photoneo Support: Add photoneo camera to the list
+#ifdef USE_PHOTONEO
+    list += list_devices_photoneo();
 #endif
 
     return list;
