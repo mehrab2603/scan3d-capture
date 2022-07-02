@@ -1,63 +1,81 @@
-# scan3d-capture
-Projector-Camera Calibration / 3D Scanning Software
+# procamcalib
 
-This software is modified from the 3D scanning software originally written by Daniel Moreno and Gabriel Taubin from Brown University http://mesh.brown.edu/calibration/software.html
+Projector-Camera Calibration Application
 
-**Added functions**
+This software was originally written by the Daniel Moreno and Gabriel Taubin
+from Brown University, which can be found at this
+[link](http://mesh.brown.edu/calibration/software.html).
+Please see LICENSE.txt
 
-- CMake build system
-- OpenCV 3+ support
-- Spinnaker SDK integration to increase camera support (eg. Point Grey / FLIR cameras)
-- Built-in Spinnaker-supported camera parameter control mechanism
+This software was then modified by GitHub user `mehrab2603`, who added CMake
+support, OpenCV 3+ support, and Spinnaker SDK integrations to allow support of
+Point Grey / FLIR cameras. Their work heavily aided the Photoneo camera support
+this fork adds. Their repository can be found at this
+[link](https://github.com/mehrab2603/scan3d-capture).
 
-**Requirements**
+## Features
 
-- Qt 5
+    - CMake build system
+    - OpenCV 3+ support
+    - Photoneo Camera Support
 
-	Download Qt 5 
-	https://www.qt.io/download-qt-installer
-	Select "Custom Install"
-	Select "Archive" and Search
-	Find Qt 5.15 and Install full Package. Will take a long time! > 1 hour to install
-	 
-- CMake 3.10.0+
+## Prerequisites
 
-	Install CMake
-	https://cmake.org/download/
-	Get Windows x64 Installer
-	Add to path
+1. Qt 5.15
+    
+    1. Download and run the [Qt 5.15 installer](https://www.qt.io/download-qt-installer)
+    2. Select "Custom Install" in the installation type
+    3. Check the "Archive" checkbox to find the 5.15 release
+    4. Install the full Qt 5.15 installation. This will take > 1 hr to install
 
-- OpenCV 3+
+2. CMake 3.10.0+
 
-	Install OpenCV 3 (e.g. OpenCV 3.4.16)
-	https://opencv.org/releases/
-	Use Windows Installer
+	1. Download and run the [CMake installer](https://cmake.org/download/)
+    2. When prompted in the installer, add to `PATH`
 
-- Visual Studio 2017
-	Install Visual Studo 2017 64b (to pair with Qt 5.15)
-	https://my.visualstudio.com/Downloads
-	Install with Desktop Development with C++
+2. OpenCV 3.4.16
 
+    1. Download and run the [OpenCV 3.4.16 installer](https://opencv.org/releases/)
+    2. Note your install path, you will need to provide it to CMake later
 
-- Spinnaker SDK 2.0.0.147 (optional)
+3. Visual Studio 2017
 
+    1. Download and run the [Visual Studio 2016 64-bit installer](https://my.visualstudio.com/Downloads)
+    2. When prompted, install with "Desktop Development with C++}"
 
+4. Photoneo PhoXi Control (optional)
 
-**Installation**
+    1. Download and run the [PhoXi Control Installer](https://www.photoneo.com/downloads/phoxi-control/)
+    2. Select "PhoXi Control" in the dropdown menu and download the "Windows 10" installer
+	3. Follow all of the prompts and select the "Full" install type
+	4. The files should be installed to C:/Progam Files/Photoneo, which is the default option
 
-In the root directory, create a directory named `build` and then inside this directory execute the following commands to build with Spinnaker support.
+5. Spinnaker SDK 2.0.0.147 (optional - no ongoing support for this SDK)
 
-```
-cmake -DWITH_SPINNAKER=ON -DCMAKE_BUILD_TYPE=Release ..
-cmake --build .
-```
+## Installation
 
-Be sure to build in Release mode
+To build with Photoneo support: 
 
-You will need to add OpenCV to your `PATH` if it is not already.
-e.g.
-C:\dev\opencv_3.4.16_install\opencv\build\x64\vc15\bin
+1. In the top level dir, create a `build` directory
 
-**Usage**
+2. Open the top level dir in the CMake GUI and set `build` as the build dir
 
-Please refer to the original Brown University page for instructions on how to use this software. For Spinnaker cameras, it is needed to have the devices be assigned IP addressess from the same network using the Force IP feature of the FlyCapture software or using similar features from other softwares (eg. SpinView) before using with this software. Spinnaker-supported cameras will have a button appear beside their names in the `Capture` dialog to allow for adjusting camera parameters.
+3. Select the `WITH_PHOTONEO`checkbox to enable Photoneo support
+
+4. Click "Configure"
+
+5. Set `OpenCV_DIR` to the appropriate location. In our installation, this was in
+   `C:/dev/opencv_3.4.16_install/opencv/build`
+
+6. Click "Configure" - at this point, no red entries should appear
+
+7. Click "Generate" then "Open Project" to open the project in Visual Studio
+
+8. Be sure to build in Release Mode
+
+9. You will need to add OpenCV to your `PATH` if it is not already, e.g.
+   `C:\dev\opencv_3.4.16_install\opencv\build\x64\vc15\bin`
+
+# Usage
+
+TODO: Copy Ye Min's guidelines here.
