@@ -899,20 +899,22 @@ void Application::calibrate(void)
                   + cv::CALIB_FIX_K3
                   ;
 
+    cv::Mat placeholder;
+
     //calibrate the camera ////////////////////////////////////
     processing_message(QString(" * Calibrate camera [%1x%2]").arg(imageSize.width).arg(imageSize.height));
     std::vector<cv::Mat> cam_rvecs, cam_tvecs;
     int cam_flags = cal_flags;
-    calib.cam_error = cv::calibrateCamera(world_corners_active, camera_corners_active, imageSize, calib.cam_K, calib.cam_kc, cam_rvecs, cam_tvecs, cam_flags, 
-                                            cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
+    calib.cam_error = cv::calibrateCamera(world_corners_active, camera_corners_active, imageSize, calib.cam_K, calib.cam_kc, cam_rvecs, cam_tvecs,
+                                            placeholder, placeholder, calib.cam_per_view_errors, cam_flags, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
 
     //calibrate the projector ////////////////////////////////////
     cv::Size projector_size(get_projector_width(), get_projector_height());
     processing_message(QString(" * Calibrate projector [%1x%2]").arg(projector_size.width).arg(projector_size.height));
     std::vector<cv::Mat> proj_rvecs, proj_tvecs;
     int proj_flags = cal_flags;
-    calib.proj_error = cv::calibrateCamera(world_corners_active, projector_corners_active, projector_size, calib.proj_K, calib.proj_kc, proj_rvecs, proj_tvecs, proj_flags, 
-                                             cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
+    calib.proj_error = cv::calibrateCamera(world_corners_active, projector_corners_active, projector_size, calib.proj_K, calib.proj_kc, proj_rvecs, proj_tvecs,
+                                             placeholder, placeholder, calib.proj_per_view_errors, proj_flags, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
 /*
     //TMP: estimate an initial stereo R and T
     double errStereo = 0.0;
@@ -1024,7 +1026,7 @@ void Application::calibrate(void)
     //stereo calibration
     processing_message(" * Calibrate stereo");
     calib.stereo_error = cv::stereoCalibrate(world_corners_active, camera_corners_active, projector_corners_active, calib.cam_K, calib.cam_kc, calib.proj_K, calib.proj_kc, 
-                                                imageSize /*ignored*/, calib.R, calib.T, calib.E, calib.F, 
+                                                imageSize /*ignored*/, calib.R, calib.T, calib.E, calib.F, calib.stereo_per_view_errors,
                                                 cv::CALIB_FIX_INTRINSIC /*cv::CALIB_USE_INTRINSIC_GUESS*/ + cal_flags, 
                                                 cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 150, DBL_EPSILON));
 

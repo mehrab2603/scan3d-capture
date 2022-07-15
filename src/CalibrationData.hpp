@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
 #include <QString>
+#include <vector>
 #include <opencv2/core.hpp>
 
 class CalibrationData
@@ -69,6 +70,10 @@ public:
     double cam_error;
     double proj_error;
     double stereo_error;
+
+    cv::Mat cam_per_view_errors;
+    cv::Mat proj_per_view_errors;
+    cv::Mat stereo_per_view_errors;
 
     QString filename;
 };
