@@ -893,20 +893,41 @@ void Application::calibrate(void)
     }
 
     int cal_flags = 0
-                  //+ cv::CALIB_FIX_K1
-                  //+ cv::CALIB_FIX_K2
-                  //+ cv::CALIB_ZERO_TANGENT_DIST
-                  + cv::CALIB_FIX_K3
+//                  + cv::CALIB_FIX_K1
+//                  + cv::CALIB_FIX_K2
+//                  + cv::CALIB_ZERO_TANGENT_DIST
+//                  + cv::CALIB_FIX_K3
                   ;
 
     cv::Mat placeholder;
 
     //calibrate the camera ////////////////////////////////////
-    processing_message(QString(" * Calibrate camera [%1x%2]").arg(imageSize.width).arg(imageSize.height));
-    std::vector<cv::Mat> cam_rvecs, cam_tvecs;
-    int cam_flags = cal_flags;
-    calib.cam_error = cv::calibrateCamera(world_corners_active, camera_corners_active, imageSize, calib.cam_K, calib.cam_kc, cam_rvecs, cam_tvecs,
-                                            placeholder, placeholder, calib.cam_per_view_errors, cam_flags, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
+   QString intrinsics_source = config.value(INTRINSICS_SOURCE_CONFIG, QString(INTRINSICS_SOURCE_DEFAULT)).toString();
+   std::cout << "Intrinsics Source: " << qPrintable(intrinsics_source) << std::endl;
+   if (intrinsics_source == "Calibration") {
+       processing_message(QString(" * Calibrate camera [%1x%2]").arg(imageSize.width).arg(imageSize.height));
+       std::vector<cv::Mat> cam_rvecs, cam_tvecs;
+       int cam_flags = cal_flags;
+       calib.cam_error = cv::calibrateCamera(world_corners_active, camera_corners_active, imageSize, calib.cam_K, calib.cam_kc, cam_rvecs, cam_tvecs,
+                                               placeholder, placeholder, calib.cam_per_view_errors, cam_flags, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
+   } else {
+       processing_message(QString(" * Importing %1 intrinsics").arg(intrinsics_source));
+       if (intrinsics_source == "Photoneo") {
+           calib.cam_K = cv::Mat::eye(3, 3, CV_32F);
+           calib.cam_K.at<float>(0, 0) = 1725.1416f;   // fx
+           calib.cam_K.at<float>(1, 1) = 1724.5842f;   // fy
+           calib.cam_K.at<float>(0, 2) = 827.7343f;    // cx
+           calib.cam_K.at<float>(1, 2) = 609.7365f;    // cy
+       } else {     // RealSense
+           calib.cam_K = cv::Mat::eye(3, 3, CV_32F);
+           calib.cam_K.at<float>(0, 0) = 2237.5322f;   // fx
+           calib.cam_K.at<float>(1, 1) = 2238.6283f;   // fy
+           calib.cam_K.at<float>(0, 2) = 1043.5028f;    // cx
+           calib.cam_K.at<float>(1, 2) = 802.9050f;    // cy
+       }
+       calib.cam_kc = cv::Mat::zeros(1, 5, CV_32F);
+       calib.cam_error = 0;
+   }
 
     //calibrate the projector ////////////////////////////////////
     cv::Size projector_size(get_projector_width(), get_projector_height());

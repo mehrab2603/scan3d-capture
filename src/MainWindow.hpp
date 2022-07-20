@@ -88,6 +88,7 @@ public slots:
 
     //calibration group
     void on_homography_window_spin_valueChanged(int i);
+    void on_intrinsics_source_combo_activated(int index);
 
     //reconstruction group
     void on_max_dist_line_editingFinished();

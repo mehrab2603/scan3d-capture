@@ -338,7 +338,15 @@ void MainWindow::on_m_spin_valueChanged(int i)
 
 void MainWindow::on_homography_window_spin_valueChanged(int i)
 {
-  APP->config.setValue(HOMOGRAPHY_WINDOW_CONFIG, i);
+    APP->config.setValue(HOMOGRAPHY_WINDOW_CONFIG, i);
+}
+
+void MainWindow::on_intrinsics_source_combo_activated(int index)
+{
+    std::cout << "Activated Intrinsics Source ..." << "\n";
+    std::cout << "Index: " << index << "\n";
+    std::cout << "Text: " << qPrintable(intrinsics_source_combo->currentText()) << "\n";
+    APP->config.setValue(INTRINSICS_SOURCE_CONFIG, intrinsics_source_combo->currentText());
 }
 
 void  MainWindow::on_max_dist_line_editingFinished()

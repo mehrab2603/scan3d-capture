@@ -6,9 +6,9 @@
 # Edit this section to make sure the paths match your system configuration
 
 # Windows 7
-win32:OPENCV_DIR = C:/opencv/2.4.11
-win32:OPENCV_LIB_DIR = $${OPENCV_DIR}/x64/vc10/lib
-win32:CV_VER = 2411
+win32:OPENCV_DIR = "C:/Program Files/opencv/build"
+win32:OPENCV_LIB_DIR = $${OPENCV_DIR}/x64/vc15/lib
+win32:CV_VER = 3416
 
 # Mac OS X Lion
 macx:OPENCV_DIR = "/usr/local"

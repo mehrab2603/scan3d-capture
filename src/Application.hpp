@@ -109,6 +109,8 @@ enum NodeType {Enum, Bool};
 //calibration
 #define HOMOGRAPHY_WINDOW_CONFIG         "calibration/homography_window"
 #define HOMOGRAPHY_WINDOW_DEFAULT        60
+#define INTRINSICS_SOURCE_CONFIG         "calibration/intrinsics_source"
+#define INTRINSICS_SOURCE_DEFAULT        "Calibration"
 
 //reconstruction
 #define MAX_DIST_CONFIG         "reconstruction/max_dist"
