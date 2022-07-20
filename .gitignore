@@ -35,5 +35,9 @@
 build
 bin
 install
+data
+
+# IDE/Editor Configs
 .vscode
+.vs
 

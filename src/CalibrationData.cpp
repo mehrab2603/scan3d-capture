@@ -187,20 +187,31 @@ void CalibrationData::display(std::ostream & stream) const
         << " - K:\n" << cam_K << std::endl
         << " - kc: " << cam_kc << std::endl
         ;
-    stream << " - per-view reprojection errors: " << cam_per_view_errors << std::endl;
+
     stream << std::endl;
     stream << "Projector Calib: " << std::endl
         << " - reprojection error: " << proj_error << std::endl
         << " - K:\n" << proj_K << std::endl
         << " - kc: " << proj_kc << std::endl
         ;
-    stream << " - per-view reprojection errors: " << proj_per_view_errors << std::endl;
+
+    // Log the per-view errors (per-view error dim: n x 1)
+    stream << " - per-view reprojection errors: [" << "\n";
+    for (int r = 0; r < proj_per_view_errors.rows; ++r)
+        stream << r << ": " << proj_per_view_errors.row(r) << '\n';
+    stream << "]" << std::endl;
+
     stream << std::endl;
     stream << "Stereo Calib: " << std::endl
         << " - reprojection error: " << stereo_error << std::endl
         << " - R:\n" << R << std::endl
         << " - T:\n" << T << std::endl
         ;
-    stream << " - per-view reprojection errors: " << stereo_per_view_errors << std::endl;
+
+    // Log the per-view errors (per-view error dim: n x 2)
+    stream << " - per-view reprojection errors: [" << "\n";
+    for (int r = 0; r < stereo_per_view_errors.rows; ++r)
+        stream << r << ": " << stereo_per_view_errors.row(r) << '\n';
+    stream << "]" << std::endl;
 }
 
