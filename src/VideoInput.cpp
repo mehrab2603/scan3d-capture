@@ -53,6 +53,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -157,7 +158,7 @@ void VideoInput::run()
         catch(Spinnaker::Exception& e)
         {
             std::cerr << "Error releasing image: " << e.what() << std::endl;
-        }
+        
     }
 #endif
 // Photoneo Support: Get images from the Photoneo sensor
@@ -195,13 +196,25 @@ void VideoInput::run()
 		// You can't use convertTo to change number of channels, so you need to first use cvt::Color
 		// to go from 1 to 3 channels
 		cv::cvtColor(Image, Image, CV_GRAY2RGB);
-		// you need minimum and maximum values to normalize when converting to 8UC3
-		double minVal;
-		double maxVal;
-		cv::minMaxLoc(Image, &minVal, &maxVal);
+
+        // Normalizing with dynamic values leads to inconsistent illuminations across graycode-projected
+        // scenes. For now, use the empirical value of 0 and 800.
+        double minVal = 0.0;
+        double maxVal = 800.0;
+		// cv::minMaxLoc(Image, &minVal, &maxVal);
+
 		// convert to 8UC3 with proper normalization - 8UC3 allows display by the camera preview
 		Image.convertTo(Image, CV_8UC3, 255.0 / (maxVal - minVal), -255.0 * minVal / (maxVal - minVal));
         emit new_image(Image);
+
+		// int image_height = Frame->TextureRGB.GetDimension(0);
+		// int image_width = Frame->TextureRGB.GetDimension(1);
+
+		// cv::Mat image = cv::Mat(image_height, image_width, CV_16UC3, Frame->TextureRGB.GetDataPtr());
+        // image = image / 4;
+        // image.convertTo(image, CV_8UC3);
+
+        // emit new_image(image);
     }
 #endif
 

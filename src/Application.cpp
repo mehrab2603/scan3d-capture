@@ -914,10 +914,10 @@ void Application::calibrate(void)
        processing_message(QString(" * Importing %1 intrinsics").arg(intrinsics_source));
        if (intrinsics_source == "Photoneo") {
            calib.cam_K = cv::Mat::eye(3, 3, CV_32F);
-           calib.cam_K.at<float>(0, 0) = 1725.1416f;   // fx
-           calib.cam_K.at<float>(1, 1) = 1724.5842f;   // fy
-           calib.cam_K.at<float>(0, 2) = 827.7343f;    // cx
-           calib.cam_K.at<float>(1, 2) = 609.7365f;    // cy
+           calib.cam_K.at<float>(0, 0) = 1737.3321211497578f;       // fx
+           calib.cam_K.at<float>(1, 1) = 1737.4827632466724f;       // fy
+           calib.cam_K.at<float>(0, 2) = 835.19535492073635f;       // cx
+           calib.cam_K.at<float>(1, 2) = 605.19775661082508f;       // cy
        } else {     // RealSense
            calib.cam_K = cv::Mat::eye(3, 3, CV_32F);
            calib.cam_K.at<float>(0, 0) = 1346.9211f;   // fx
