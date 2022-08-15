@@ -173,48 +173,47 @@ void VideoInput::run()
 			// if negative number is returned, trigger was unsuccessful
 			std::cout << "Trigger was unsuccessful! code=" << FrameID << std::endl;
 		}
-		else
-		{
-			std::cout << "Frame was triggered, Frame Id: " << FrameID << std::endl;
-		}
 
-		pho::api::PFrame Frame = _photoneo_camera->GetSpecificFrame(FrameID, pho::api::PhoXiTimeout::Infinity);
+		pho::api::PFrame Frame = _photoneo_camera->GetFrame(pho::api::PhoXiTimeout::Infinity);
 
-		if (Frame)
-		{
-			std::cout << "Frame Retrieval Succesful" << std::endl;
-		}
-		else
+        if (!Frame)
 		{
 			std::cout << "Failed to retrieve the frame!" << std::endl;
 		}
 
 		int image_height = Frame->Texture.GetDimension(0);
 		int image_width = Frame->Texture.GetDimension(1);
+
 		// Frame-> Texture is a 32b Float that encodes intensity (1 channel only)
 		cv::Mat Image = cv::Mat(image_height, image_width, CV_32FC1, Frame->Texture.GetDataPtr());
+
 		// You can't use convertTo to change number of channels, so you need to first use cvt::Color
-		// to go from 1 to 3 channels
+		// to go from 1 to 3 channels.
 		cv::cvtColor(Image, Image, CV_GRAY2RGB);
 
         // Normalizing with dynamic values leads to inconsistent illuminations across graycode-projected
-        // scenes. For now, use the empirical value of 0 and 800.
+        // scenes. Therefore, we must use fixed values for normalization. For now, we are using the maximum
+        // and minimum values of 0 and 800, based on empirical observations alone.
         double minVal = 0.0;
         double maxVal = 800.0;
-		// cv::minMaxLoc(Image, &minVal, &maxVal);
 
-		// convert to 8UC3 with proper normalization - 8UC3 allows display by the camera preview
+		// Convert to 8UC3 with proper normalization - 8UC3 allows display by the camera preview.
 		Image.convertTo(Image, CV_8UC3, 255.0 / (maxVal - minVal), -255.0 * minVal / (maxVal - minVal));
+
         emit new_image(Image);
 
-		// int image_height = Frame->TextureRGB.GetDimension(0);
-		// int image_width = Frame->TextureRGB.GetDimension(1);
+        /* --------------------- Code for fetching and using RGB Texture ----------------------------------
 
-		// cv::Mat image = cv::Mat(image_height, image_width, CV_16UC3, Frame->TextureRGB.GetDataPtr());
-        // image = image / 4;
-        // image.convertTo(image, CV_8UC3);
+		int image_height = Frame->TextureRGB.GetDimension(0);
+		int image_width = Frame->TextureRGB.GetDimension(1);
 
-        // emit new_image(image);
+		cv::Mat image = cv::Mat(image_height, image_width, CV_16UC3, Frame->TextureRGB.GetDataPtr());
+        image = image / 4;
+        image.convertTo(image, CV_8UC3);
+
+        emit new_image(image);
+
+        --------------------------------------------------------------------------------------------------*/
     }
 #endif
 

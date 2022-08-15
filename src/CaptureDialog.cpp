@@ -63,7 +63,7 @@ CaptureDialog::CaptureDialog(QWidget * parent, Qt::WindowFlags flags):
 
     projector_patterns_spin->setValue(APP->config.value("capture/pattern_count", 10).toInt());
     camera_exposure_spin->setMaximum(9999);
-    camera_exposure_spin->setValue(APP->config.value("capture/exposure_time", 500).toInt());
+    camera_exposure_spin->setValue(APP->config.value("capture/exposure_time", 0).toInt());
     output_dir_line->setText(APP->get_root_dir());
 
     continuous_spin->setValue(APP->config.value("capture/continuous", 100).toInt());
@@ -316,22 +316,21 @@ void CaptureDialog::_on_root_dir_changed(const QString & dirname)
 
 void CaptureDialog::_on_new_camera_image(cv::Mat image)
 {
-  size_t rotation = 0;
-  if (rot_000_radio->isChecked()) { rotation = 0; }
-  if (rot_090_radio->isChecked()) { rotation = 90; }
-  if (rot_180_radio->isChecked()) { rotation = 180; }
-  if (rot_270_radio->isChecked()) { rotation = 270; }
-  if (rotation>0)
-  {
-    image = im_util::rotate_image(image, rotation);
-  }
+	size_t rotation = 0;
+	if (rot_000_radio->isChecked()) { rotation = 0; }
+	if (rot_090_radio->isChecked()) { rotation = 90; }
+	if (rot_180_radio->isChecked()) { rotation = 180; }
+	if (rot_270_radio->isChecked()) { rotation = 270; }
+	if (rotation>0)
+	{
+	    image = im_util::rotate_image(image, rotation);
+	}
 
-
-    camera_image->setImage(image);
-    camera_resolution_label->setText(QString("[%1x%2]").arg(image.cols).arg(image.rows));
+	camera_image->setImage(image);
+	camera_resolution_label->setText(QString("[%1x%2]").arg(image.cols).arg(image.rows));
 
     if (_capture)
-    {   //save this image
+    {
         cv::imwrite(QString("%1/cam_%2.png").arg(_session).arg(_projector.get_current_pattern() + 1, 2, 10, QLatin1Char('0')).toStdString(), image);
         _capture = false;
         _projector.clear_updated();
@@ -431,8 +430,8 @@ void CaptureDialog::on_capture_button_clicked(bool checked)
     if (rot_270_radio->isChecked()) { rotation = 270; }
     _projector.save_info(QString("%1/projector_info.txt").arg(_session), (rotation==90||rotation==270?true:false));
 
-    //init time
-    wait(_wait_time);
+    // Init time
+    wait(_wait_time + 500);
 
     while (!_projector.finished())
     {
