@@ -123,7 +123,6 @@ void ProjectorWidget::next(void)
     _current_pattern++;
     _pixmap = QPixmap();
     update();
-    _last_projection_time = std::chrono::steady_clock::now();
     QApplication::processEvents();
 }
 

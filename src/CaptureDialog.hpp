@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <QDialog>
 
-#include <chrono>
 #include <opencv2/core.hpp>
 
 #include "ui_CaptureDialog.h"

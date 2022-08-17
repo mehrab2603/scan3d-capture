@@ -53,7 +53,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include <iostream>
-#include <chrono>
 #include <fstream>
 
 #include <opencv2/imgproc/imgproc.hpp>
@@ -165,12 +164,10 @@ void VideoInput::run()
 // Photoneo Support: Get images from the Photoneo sensor
 #ifdef USE_PHOTONEO
 	// TODO: Capture in 2D Image mode only?
-
     while(_photoneo_camera && !_stop && error_count<max_error)
     {
 
 		int FrameID = _photoneo_camera->TriggerFrame();
-        _last_frame_trigger_time = std::chrono::steady_clock::now();
 		if (FrameID < 0)
 		{
 			// if negative number is returned, trigger was unsuccessful
@@ -197,13 +194,11 @@ void VideoInput::run()
         // Normalizing with dynamic values leads to inconsistent illuminations across graycode-projected
         // scenes. Therefore, we must use fixed values for normalization. For now, we are using the maximum
         // and minimum values of 0 and 800, based on empirical observations alone.
-        constexpr double minVal = 0.0;
-        constexpr double maxVal = 800.0;
+        double minVal = 0.0;
+        double maxVal = 800.0;
 
 		// Convert to 8UC3 with proper normalization - 8UC3 allows display by the camera preview.
-        constexpr double scaling_factor = 255.0 / (maxVal - minVal);
-        constexpr double increment = -255.0 * minVal / (maxVal - minVal);
-		Image.convertTo(Image, CV_8UC3, scaling_factor, increment);
+		Image.convertTo(Image, CV_8UC3, 255.0 / (maxVal - minVal), -255.0 * minVal / (maxVal - minVal));
 
         emit new_image(Image);
 
