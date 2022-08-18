@@ -95,6 +95,7 @@ private:
     int _wait_time;
     unsigned _total;
     bool _cancel;
+    std::chrono::time_point<std::chrono::steady_clock> _last_projection_time;
 };
 
 #endif  /* __CAPTURENDIALOG_HPP__ */

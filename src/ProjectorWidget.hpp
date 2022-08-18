@@ -70,8 +70,6 @@ protected:
     void update_pattern_bit_count(void);
     static QPixmap make_pattern(int rows, int cols, int vmask, int voffset, int hmask, int hoffset, int inverted);
 
-public:
-    std::chrono::time_point<std::chrono::steady_clock> _last_projection_time;
 private:
     int _screen;
     QPixmap _pixmap;

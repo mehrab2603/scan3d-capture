@@ -168,21 +168,29 @@ void VideoInput::run()
 
     while(_photoneo_camera && !_stop && error_count<max_error)
     {
-
-		int FrameID = _photoneo_camera->TriggerFrame();
         _last_frame_trigger_time = std::chrono::steady_clock::now();
+		int FrameID = _photoneo_camera->TriggerFrame();
 		if (FrameID < 0)
 		{
 			// if negative number is returned, trigger was unsuccessful
 			std::cout << "Trigger was unsuccessful! code=" << FrameID << std::endl;
 		}
+        else
+        {
+            std::cout << "Triggered Frame with ID: " << FrameID << std::endl;
+        }
 
 		pho::api::PFrame Frame = _photoneo_camera->GetFrame(pho::api::PhoXiTimeout::Infinity);
 
-        if (!Frame)
+        if (Frame)
 		{
-			std::cout << "Failed to retrieve the frame!" << std::endl;
+            std::cout << "Frame Retrieved!" << std::endl;
 		}
+        else
+        {
+            std::cout << "Failed to retrieve the frame!" << std::endl;
+        }
+
 
 		int image_height = Frame->Texture.GetDimension(0);
 		int image_width = Frame->Texture.GetDimension(1);
