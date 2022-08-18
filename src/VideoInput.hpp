@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <QThread>
 #include <QStringList>
 
+#include <chrono>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 
@@ -114,6 +115,8 @@ private:
     void configure_photoneo_camera(int index, bool silent);
 #endif
 
+public:
+    std::chrono::time_point<std::chrono::steady_clock> _last_frame_trigger_time;
 private:
     int _camera_index;
 #ifdef USE_SPINNAKER

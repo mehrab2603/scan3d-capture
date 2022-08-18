@@ -329,7 +329,7 @@ void CaptureDialog::_on_new_camera_image(cv::Mat image)
 	camera_image->setImage(image);
 	camera_resolution_label->setText(QString("[%1x%2]").arg(image.cols).arg(image.rows));
 
-    if (_capture)
+    if (_capture && _projector._last_projection_time <= _video_input._last_frame_trigger_time)
     {
         cv::imwrite(QString("%1/cam_%2.png").arg(_session).arg(_projector.get_current_pattern() + 1, 2, 10, QLatin1Char('0')).toStdString(), image);
         _capture = false;
@@ -431,7 +431,7 @@ void CaptureDialog::on_capture_button_clicked(bool checked)
     _projector.save_info(QString("%1/projector_info.txt").arg(_session), (rotation==90||rotation==270?true:false));
 
     // Init time
-    wait(_wait_time + 500);
+    wait(_wait_time);
 
     while (!_projector.finished())
     {
