@@ -1087,6 +1087,17 @@ void Application::calibrate(void)
         processing_message(QString("[ERROR] Saving %1 failed").arg(filename));
     }
 
+    //save to JSON format for use in frontend / lux
+    filename = path + "/calibration_result.json";
+    if (calib.save_calibration(filename))
+    {
+        processing_message(QString("Calibration saved [JSON]: %1").arg(filename));
+    }
+    else
+    {
+        processing_message(QString("[ERROR] Saving %1 failed").arg(filename));
+    }
+
 
     //save corners
     for (unsigned i=0; i<count; i++)

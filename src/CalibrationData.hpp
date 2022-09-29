@@ -51,6 +51,7 @@ public:
     bool load_calibration_yml(QString const& filename);
     bool save_calibration_yml(QString const& filename);
 
+    bool save_calibration_json(QString const& filename);
     bool save_calibration_matlab(QString const& filename);
 
     void display(std::ostream & stream = std::cout) const;

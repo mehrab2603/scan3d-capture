@@ -83,6 +83,7 @@ bool CalibrationData::save_calibration(QString const& filename)
 
     if (type=="yml") {return save_calibration_yml(filename);}
     if (type=="m"  ) {return save_calibration_matlab(filename);}
+    if (type=="json") { return save_calibration_json(filename);}
 
     return false;
 }
@@ -136,6 +137,103 @@ bool CalibrationData::save_calibration_yml(QString const& filename)
     fs.release();
 
     this->filename = filename;
+
+    return true;
+}
+
+bool CalibrationData::save_calibration_json(QString const& filename)
+{
+    FILE* fp = fopen(qPrintable(filename), "w");
+    if (!fp)
+    {
+        return false;
+    }
+
+    cv::Mat rvec;
+    cv::Rodrigues(R, rvec);
+    fprintf(fp,
+            "{\n"
+                "\t\"cam_int\": {\n"
+                    "\t\t\"type_id\": \"opencv-matrix\",\n"
+                    "\t\t\"rows\" : 3,\n"
+                    "\t\t\"cols\" : 3,\n"
+                    "\t\t\"dt\" : \"d\",\n"
+                    "\t\t\"data\" : [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf]\n"
+                "\t},\n"
+                "\t\"cam_dist\": {\n"
+                    "\t\t\"type_id\": \"opencv-matrix\",\n"
+                    "\t\t\"rows\" : 1,\n"
+                    "\t\t\"cols\" : 5,\n"
+                    "\t\t\"dt\" : \"d\",\n"
+                    "\t\t\"data\" : [%lf, %lf, %lf, %lf, %lf]\n"
+                "\t},\n"
+                "\t\"proj_int\": {\n"
+                    "\t\t\"type_id\": \"opencv-matrix\",\n"
+                    "\t\t\"rows\" : 3,\n"
+                    "\t\t\"cols\" : 3,\n"
+                    "\t\t\"dt\" : \"d\",\n"
+                    "\t\t\"data\" : [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf]\n"
+                "\t},\n"
+                "\t\"proj_dist\": {\n"
+                    "\t\t\"type_id\": \"opencv-matrix\",\n"
+                    "\t\t\"rows\" : 1,\n"
+                    "\t\t\"cols\" : 5,\n"
+                    "\t\t\"dt\" : \"d\",\n"
+                    "\t\t\"data\" : [%lf, %lf, %lf, %lf, %lf]\n"
+                "\t},\n"
+                "\t\"rotation\": {\n"
+                    "\t\t\"type_id\": \"opencv-matrix\",\n"
+                    "\t\t\"rows\" : 3,\n"
+                    "\t\t\"cols\" : 3,\n"
+                    "\t\t\"dt\" : \"d\",\n"
+                    "\t\t\"data\" : [%lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf]\n"
+                "\t},\n"
+                "\t\"translation\": {\n"
+                    "\t\t\"type_id\": \"opencv-matrix\",\n"
+                    "\t\t\"rows\" : 3,\n"
+                    "\t\t\"cols\" : 1,\n"
+                    "\t\t\"dt\" : \"d\",\n"
+                    "\t\t\"data\" : [%lf, %lf, %lf]\n"
+                "\t},\n"
+                "\t\"img_shape\": {\n"
+                    "\t\t\"type_id\": \"opencv-matrix\",\n"
+                    "\t\t\"rows\" : 2,\n"
+                    "\t\t\"cols\" : 1,\n"
+                    "\t\t\"dt\" : \"d\",\n"
+                    "\t\t\"data\" : [%lf, %lf]\n"
+                "\t},\n"
+                "\t\"camera_error\": {\n"
+                    "\t\t\"type_id\": \"opencv-matrix\",\n"
+                    "\t\t\"rows\" : 1,\n"
+                    "\t\t\"cols\" : 1,\n"
+                    "\t\t\"dt\" : \"d\",\n"
+                    "\t\t\"data\" : [%lf]\n"
+                "\t},\n"
+                "\t\"proj_error\": {\n"
+                    "\t\t\"type_id\": \"opencv-matrix\",\n"
+                    "\t\t\"rows\" : 1,\n"
+                    "\t\t\"cols\" : 1,\n"
+                    "\t\t\"dt\" : \"d\",\n"
+                    "\t\t\"data\" : [%lf]\n"
+                "\t},\n"
+                "\t\"stereo_error\": {\n"
+                    "\t\t\"type_id\": \"opencv-matrix\",\n"
+                    "\t\t\"rows\" : 1,\n"
+                    "\t\t\"cols\" : 1,\n"
+                    "\t\t\"dt\" : \"d\",\n"
+                    "\t\t\"data\" : [%lf]\n"
+                "\t}\n"
+            "}\n",
+        cam_K.at<double>(0, 0), cam_K.at<double>(0, 1), cam_K.at<double>(0, 2), cam_K.at<double>(1, 0), cam_K.at<double>(1, 1), cam_K.at<double>(1, 2), cam_K.at<double>(2, 0), cam_K.at<double>(2, 1), cam_K.at<double>(2, 2),
+        cam_kc.at<double>(0, 0), cam_kc.at<double>(0, 1), cam_kc.at<double>(0, 2), cam_kc.at<double>(0, 3), cam_kc.at<double>(0, 4),
+        proj_K.at<double>(0, 0), proj_K.at<double>(0, 1), proj_K.at<double>(0, 2), proj_K.at<double>(1, 0), proj_K.at<double>(1, 1), proj_K.at<double>(1, 2), proj_K.at<double>(2, 0), proj_K.at<double>(2, 1), proj_K.at<double>(2, 2),
+        proj_kc.at<double>(0, 0), proj_kc.at<double>(0, 1), proj_kc.at<double>(0, 2), proj_kc.at<double>(0, 3), proj_kc.at<double>(0, 4),
+        R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2),
+        T.at<double>(0, 0) / 1000.0f, T.at<double>(1, 0) / 1000.0f, T.at<double>(2, 0) / 1000.0f,
+        1080.0f, 1920.0f,
+        cam_error, proj_error, stereo_error
+    );
+    fclose(fp);
 
     return true;
 }
