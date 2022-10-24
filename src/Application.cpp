@@ -918,14 +918,20 @@ void Application::calibrate(void)
            calib.cam_K.at<float>(1, 1) = 1737.4827632466724f;       // fy
            calib.cam_K.at<float>(0, 2) = 835.19535492073635f;       // cx
            calib.cam_K.at<float>(1, 2) = 605.19775661082508f;       // cy
+           calib.cam_kc = cv::Mat::zeros(1, 5, CV_32F);
+           calib.cam_kc.at<float>(0, 0) = -0.0877618f;
+           calib.cam_kc.at<float>(0, 1) = 0.125492;
+           calib.cam_kc.at<float>(0, 2) = 0.000530939;
+           calib.cam_kc.at<float>(0, 3) = -0.0012224;
+           calib.cam_kc.at<float>(0, 4) = 0.0168821;
        } else {     // RealSense
            calib.cam_K = cv::Mat::eye(3, 3, CV_32F);
            calib.cam_K.at<float>(0, 0) = 1346.9211f;   // fx
            calib.cam_K.at<float>(1, 1) = 1346.9994f;   // fy
            calib.cam_K.at<float>(0, 2) = 989.5052f;    // cx
            calib.cam_K.at<float>(1, 2) = 542.6446f;    // cy
+           calib.cam_kc = cv::Mat::zeros(1, 5, CV_32F);
        }
-       calib.cam_kc = cv::Mat::zeros(1, 5, CV_32F);
        calib.cam_error = 0;
    }
 
