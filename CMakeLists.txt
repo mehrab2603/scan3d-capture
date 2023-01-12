@@ -16,6 +16,7 @@ set(CMAKE_AUTOUIC_SEARCH_PATHS forms)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
+set(OpenCV_DIR "C:/dev/opencv-4.7.0/install")
 find_package(OpenCV COMPONENTS core imgproc highgui calib3d features2d flann REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Qt5 COMPONENTS OpenGL REQUIRED)

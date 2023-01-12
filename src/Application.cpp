@@ -939,7 +939,13 @@ void Application::calibrate(void)
     cv::Size projector_size(get_projector_width(), get_projector_height());
     processing_message(QString(" * Calibrate projector [%1x%2]").arg(projector_size.width).arg(projector_size.height));
     std::vector<cv::Mat> proj_rvecs, proj_tvecs;
-    int proj_flags = cal_flags;
+    calib.proj_K = cv::Mat::eye(3, 3, CV_32F);
+    calib.proj_K.at<float>(0, 0) = 900.0f; // fx
+    calib.proj_K.at<float>(1, 1) = 900.0f; // fy
+    calib.proj_K.at<float>(0, 2) = 960.0f;              // cx
+    calib.proj_K.at<float>(1, 2) = 1252.8f;             // cy
+    calib.proj_kc = cv::Mat::zeros(1, 5, CV_32F);
+    int proj_flags = cv::CALIB_USE_INTRINSIC_GUESS | cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_ASPECT_RATIO | cv::CALIB_FIX_K1 | cv::CALIB_FIX_K2 | cv::CALIB_FIX_K3;
     calib.proj_error = cv::calibrateCamera(world_corners_active, projector_corners_active, projector_size, calib.proj_K, calib.proj_kc, proj_rvecs, proj_tvecs,
                                              placeholder, placeholder, calib.proj_per_view_errors, proj_flags, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
 /*

@@ -200,13 +200,13 @@ void VideoInput::run()
 
 		// You can't use convertTo to change number of channels, so you need to first use cvt::Color
 		// to go from 1 to 3 channels.
-		cv::cvtColor(Image, Image, CV_GRAY2RGB);
+		cv::cvtColor(Image, Image, cv::COLOR_GRAY2RGB);
 
         // Normalizing with dynamic values leads to inconsistent illuminations across graycode-projected
         // scenes. Therefore, we must use fixed values for normalization. For now, we are using the maximum
         // and minimum values of 0 and 800, based on empirical observations alone.
         constexpr double minVal = 0.0;
-        constexpr double maxVal = 800.0;
+        constexpr double maxVal = 1024.0;
 
 		// Convert to 8UC3 with proper normalization - 8UC3 allows display by the camera preview.
         constexpr double scaling_factor = 255.0 / (maxVal - minVal);
