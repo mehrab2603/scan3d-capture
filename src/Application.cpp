@@ -916,10 +916,10 @@ void Application::calibrate(void)
             calib.cam_K.at<float>(1, 2) = 605.19775661082508f;   // cy
             calib.cam_kc = cv::Mat::zeros(1, 5, CV_32F);
             calib.cam_kc.at<float>(0, 0) = -0.0877618f;          // k1 (radial)
-            calib.cam_kc.at<float>(0, 1) = 0.125492;             // k2 (radial)
-            calib.cam_kc.at<float>(0, 2) = 0.000530939;          // p1 (tangential)
-            calib.cam_kc.at<float>(0, 3) = -0.0012224;           // p2 (tangential)
-            calib.cam_kc.at<float>(0, 4) = 0.0168821;            // k3 (radial)
+            calib.cam_kc.at<float>(0, 1) = 0.125492f;            // k2 (radial)
+            calib.cam_kc.at<float>(0, 2) = 0.000530939f;         // p1 (tangential)
+            calib.cam_kc.at<float>(0, 3) = -0.0012224f;          // p2 (tangential)
+            calib.cam_kc.at<float>(0, 4) = 0.0168821f;           // k3 (radial)
         } else {
             // RealSense Parameters
             calib.cam_K = cv::Mat::eye(3, 3, CV_32F);
@@ -946,13 +946,18 @@ void Application::calibrate(void)
     calib.proj_K.at<float>(1, 2) = 1252.8f;                     // cy (116% offset, so 1080 * 1.16 = 1252.8)
     calib.proj_kc = cv::Mat::zeros(1, 5, CV_32F);
 
-    // Utilize the intrinsic guess above, fix the principal point and aspect ratio in that guess. Do not solve for tangent distortion or higher order (k3+) radial distortion terms.
-    int proj_flags = cv::CALIB_USE_INTRINSIC_GUESS | cv::CALIB_FIX_PRINCIPAL_POINT | cv::CALIB_FIX_ASPECT_RATIO | cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_K3;
+    // Solve for focal length only. 
+    int proj_flags = cv::CALIB_USE_INTRINSIC_GUESS | cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_K3 | cv::CALIB_FIX_K1 | cv::CALIB_FIX_K2 | cv::CALIB_FIX_PRINCIPAL_POINT | cv::CALIB_FIX_ASPECT_RATIO;
     calib.proj_error = cv::calibrateCamera(world_corners_active, projector_corners_active, projector_size, calib.proj_K, calib.proj_kc, proj_rvecs, proj_tvecs,
                                              placeholder, placeholder, calib.proj_per_view_errors, proj_flags, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
     
-    // Try and refine principal point estimate.
-    proj_flags = cv::CALIB_USE_INTRINSIC_GUESS | cv::CALIB_FIX_ASPECT_RATIO | cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_K3 | cv::CALIB_FIX_K1 | cv::CALIB_FIX_K2 | cv::CALIB_FIX_FOCAL_LENGTH;
+    // Refine principal point only.
+    proj_flags = cv::CALIB_USE_INTRINSIC_GUESS | cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_K3 | cv::CALIB_FIX_K1 | cv::CALIB_FIX_K2 | cv::CALIB_FIX_FOCAL_LENGTH;
+    calib.proj_error = cv::calibrateCamera(world_corners_active, projector_corners_active, projector_size, calib.proj_K, calib.proj_kc, proj_rvecs, proj_tvecs,
+                                             placeholder, placeholder, calib.proj_per_view_errors, proj_flags, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
+
+    // Solve for k1 and k2 radial distortion coefficients only.
+    proj_flags = cv::CALIB_USE_INTRINSIC_GUESS | cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_K3 | cv::CALIB_FIX_PRINCIPAL_POINT | cv::CALIB_FIX_FOCAL_LENGTH;
     calib.proj_error = cv::calibrateCamera(world_corners_active, projector_corners_active, projector_size, calib.proj_K, calib.proj_kc, proj_rvecs, proj_tvecs,
                                              placeholder, placeholder, calib.proj_per_view_errors, proj_flags, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
 
