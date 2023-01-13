@@ -898,9 +898,11 @@ void Application::calibrate(void)
     // Capture Camera Calibration
     QString intrinsics_source = config.value(INTRINSICS_SOURCE_CONFIG, QString(INTRINSICS_SOURCE_DEFAULT)).toString();
     std::cout << "Intrinsics Source: " << qPrintable(intrinsics_source) << std::endl;
+    processing_message(QString(" * Calibrate camera [%1x%2]").arg(imageSize.width).arg(imageSize.height));
+    calib.cam_width = imageSize.width;
+    calib.cam_height = imageSize.height;
     // Source intrisics from camera calibration.
     if (intrinsics_source == "Calibration") {
-        processing_message(QString(" * Calibrate camera [%1x%2]").arg(imageSize.width).arg(imageSize.height));
         std::vector<cv::Mat> cam_rvecs, cam_tvecs;
         int cam_flags = 0;
         calib.cam_error = cv::calibrateCamera(world_corners_active, camera_corners_active, imageSize, calib.cam_K, calib.cam_kc, cam_rvecs, cam_tvecs,
@@ -935,6 +937,8 @@ void Application::calibrate(void)
     // Projector Calibration
     cv::Size projector_size(get_projector_width(), get_projector_height());
     processing_message(QString(" * Calibrate projector [%1x%2]").arg(projector_size.width).arg(projector_size.height));
+    calib.proj_width = projector_size.width;
+    calib.proj_height = projector_size.height;
     std::vector<cv::Mat> proj_rvecs, proj_tvecs;
     calib.proj_K = cv::Mat::eye(3, 3, CV_32F);
     // Optoma GT1080HDR Parameters

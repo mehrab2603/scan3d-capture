@@ -72,6 +72,11 @@ public:
     double proj_error;
     double stereo_error;
 
+    double cam_width;
+    double cam_height;
+    double proj_width;
+    double proj_height;
+
     cv::Mat cam_per_view_errors;
     cv::Mat proj_per_view_errors;
     cv::Mat stereo_per_view_errors;

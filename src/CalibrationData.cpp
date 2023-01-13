@@ -59,6 +59,19 @@ void CalibrationData::clear(void)
     // H1 = cv::Mat();
     // H2 = cv::Mat();
     filename = QString();
+
+    cam_error = 0.0;
+    proj_error = 0.0;
+    stereo_error = 0.0;
+
+    cam_width = 0;
+    cam_height = 0;
+    proj_width = 0;
+    proj_height = 0;
+
+    cam_per_view_errors = cv::Mat();
+    proj_per_view_errors = cv::Mat();
+    stereo_per_view_errors = cv::Mat();
 }
 
 bool CalibrationData::is_valid(void) const
@@ -195,14 +208,21 @@ bool CalibrationData::save_calibration_json(QString const& filename)
                     "\t\t\"dt\" : \"d\",\n"
                     "\t\t\"data\" : [%lf, %lf, %lf]\n"
                 "\t},\n"
-                "\t\"img_shape\": {\n"
+                "\t\"cam_shape\": {\n"
                     "\t\t\"type_id\": \"opencv-matrix\",\n"
                     "\t\t\"rows\" : 2,\n"
                     "\t\t\"cols\" : 1,\n"
                     "\t\t\"dt\" : \"d\",\n"
                     "\t\t\"data\" : [%lf, %lf]\n"
                 "\t},\n"
-                "\t\"camera_error\": {\n"
+                "\t\"proj_shape\": {\n"
+                    "\t\t\"type_id\": \"opencv-matrix\",\n"
+                    "\t\t\"rows\" : 2,\n"
+                    "\t\t\"cols\" : 1,\n"
+                    "\t\t\"dt\" : \"d\",\n"
+                    "\t\t\"data\" : [%lf, %lf]\n"
+                "\t},\n"
+                "\t\"cam_error\": {\n"
                     "\t\t\"type_id\": \"opencv-matrix\",\n"
                     "\t\t\"rows\" : 1,\n"
                     "\t\t\"cols\" : 1,\n"
@@ -229,8 +249,10 @@ bool CalibrationData::save_calibration_json(QString const& filename)
         proj_K.at<double>(0, 0), proj_K.at<double>(0, 1), proj_K.at<double>(0, 2), proj_K.at<double>(1, 0), proj_K.at<double>(1, 1), proj_K.at<double>(1, 2), proj_K.at<double>(2, 0), proj_K.at<double>(2, 1), proj_K.at<double>(2, 2),
         proj_kc.at<double>(0, 0), proj_kc.at<double>(0, 1), proj_kc.at<double>(0, 2), proj_kc.at<double>(0, 3), proj_kc.at<double>(0, 4),
         R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2),
+        // Translation is divided by 1000.0f in order to convert from mm to m. Assumes that the input unit for checkerboard size is in mm.
         T.at<double>(0, 0) / 1000.0f, T.at<double>(1, 0) / 1000.0f, T.at<double>(2, 0) / 1000.0f,
-        1080.0f, 1920.0f,
+        cam_height, cam_width,
+        proj_height, proj_width,
         cam_error, proj_error, stereo_error
     );
     fclose(fp);
