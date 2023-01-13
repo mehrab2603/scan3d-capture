@@ -892,62 +892,70 @@ void Application::calibrate(void)
         return;
     }
 
-    int cal_flags = 0
-//                  + cv::CALIB_FIX_K1
-//                  + cv::CALIB_FIX_K2
-//                  + cv::CALIB_ZERO_TANGENT_DIST
-//                  + cv::CALIB_FIX_K3
-                  ;
-
+    // Placeholder for standard deviations output by cv::calibrateCamera.
     cv::Mat placeholder;
 
-    //calibrate the camera ////////////////////////////////////
-   QString intrinsics_source = config.value(INTRINSICS_SOURCE_CONFIG, QString(INTRINSICS_SOURCE_DEFAULT)).toString();
-   std::cout << "Intrinsics Source: " << qPrintable(intrinsics_source) << std::endl;
-   if (intrinsics_source == "Calibration") {
-       processing_message(QString(" * Calibrate camera [%1x%2]").arg(imageSize.width).arg(imageSize.height));
-       std::vector<cv::Mat> cam_rvecs, cam_tvecs;
-       int cam_flags = cal_flags;
-       calib.cam_error = cv::calibrateCamera(world_corners_active, camera_corners_active, imageSize, calib.cam_K, calib.cam_kc, cam_rvecs, cam_tvecs,
-                                               placeholder, placeholder, calib.cam_per_view_errors, cam_flags, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
-   } else {
-       processing_message(QString(" * Importing %1 intrinsics").arg(intrinsics_source));
-       if (intrinsics_source == "Photoneo") {
-           calib.cam_K = cv::Mat::eye(3, 3, CV_32F);
-           calib.cam_K.at<float>(0, 0) = 1737.3321211497578f;       // fx
-           calib.cam_K.at<float>(1, 1) = 1737.4827632466724f;       // fy
-           calib.cam_K.at<float>(0, 2) = 835.19535492073635f;       // cx
-           calib.cam_K.at<float>(1, 2) = 605.19775661082508f;       // cy
-           calib.cam_kc = cv::Mat::zeros(1, 5, CV_32F);
-           calib.cam_kc.at<float>(0, 0) = -0.0877618f;
-           calib.cam_kc.at<float>(0, 1) = 0.125492;
-           calib.cam_kc.at<float>(0, 2) = 0.000530939;
-           calib.cam_kc.at<float>(0, 3) = -0.0012224;
-           calib.cam_kc.at<float>(0, 4) = 0.0168821;
-       } else {     // RealSense
-           calib.cam_K = cv::Mat::eye(3, 3, CV_32F);
-           calib.cam_K.at<float>(0, 0) = 1346.9211f;   // fx
-           calib.cam_K.at<float>(1, 1) = 1346.9994f;   // fy
-           calib.cam_K.at<float>(0, 2) = 989.5052f;    // cx
-           calib.cam_K.at<float>(1, 2) = 542.6446f;    // cy
-           calib.cam_kc = cv::Mat::zeros(1, 5, CV_32F);
-       }
-       calib.cam_error = 0;
-   }
+    // Capture Camera Calibration
+    QString intrinsics_source = config.value(INTRINSICS_SOURCE_CONFIG, QString(INTRINSICS_SOURCE_DEFAULT)).toString();
+    std::cout << "Intrinsics Source: " << qPrintable(intrinsics_source) << std::endl;
+    // Source intrisics from camera calibration.
+    if (intrinsics_source == "Calibration") {
+        processing_message(QString(" * Calibrate camera [%1x%2]").arg(imageSize.width).arg(imageSize.height));
+        std::vector<cv::Mat> cam_rvecs, cam_tvecs;
+        int cam_flags = 0;
+        calib.cam_error = cv::calibrateCamera(world_corners_active, camera_corners_active, imageSize, calib.cam_K, calib.cam_kc, cam_rvecs, cam_tvecs,
+                                                placeholder, placeholder, calib.cam_per_view_errors, cam_flags, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
+    // Source intrisics from external parameters (e.g. manufacturer supplied).
+    } else {
+        processing_message(QString(" * Importing %1 intrinsics").arg(intrinsics_source));
+        if (intrinsics_source == "Photoneo") {
+            calib.cam_K = cv::Mat::eye(3, 3, CV_32F);
+            calib.cam_K.at<float>(0, 0) = 1737.3321211497578f;   // fx
+            calib.cam_K.at<float>(1, 1) = 1737.4827632466724f;   // fy
+            calib.cam_K.at<float>(0, 2) = 835.19535492073635f;   // cx
+            calib.cam_K.at<float>(1, 2) = 605.19775661082508f;   // cy
+            calib.cam_kc = cv::Mat::zeros(1, 5, CV_32F);
+            calib.cam_kc.at<float>(0, 0) = -0.0877618f;          // k1 (radial)
+            calib.cam_kc.at<float>(0, 1) = 0.125492;             // k2 (radial)
+            calib.cam_kc.at<float>(0, 2) = 0.000530939;          // p1 (tangential)
+            calib.cam_kc.at<float>(0, 3) = -0.0012224;           // p2 (tangential)
+            calib.cam_kc.at<float>(0, 4) = 0.0168821;            // k3 (radial)
+        } else {
+            // RealSense Parameters
+            calib.cam_K = cv::Mat::eye(3, 3, CV_32F);
+            calib.cam_K.at<float>(0, 0) = 1346.9211f;            // fx
+            calib.cam_K.at<float>(1, 1) = 1346.9994f;            // fy
+            calib.cam_K.at<float>(0, 2) = 989.5052f;             // cx
+            calib.cam_K.at<float>(1, 2) = 542.6446f;             // cy
+            calib.cam_kc = cv::Mat::zeros(1, 5, CV_32F);
+        }
+        calib.cam_error = 0;
+    }
 
-    //calibrate the projector ////////////////////////////////////
+    // Projector Calibration
     cv::Size projector_size(get_projector_width(), get_projector_height());
     processing_message(QString(" * Calibrate projector [%1x%2]").arg(projector_size.width).arg(projector_size.height));
     std::vector<cv::Mat> proj_rvecs, proj_tvecs;
     calib.proj_K = cv::Mat::eye(3, 3, CV_32F);
-    calib.proj_K.at<float>(0, 0) = 900.0f; // fx
-    calib.proj_K.at<float>(1, 1) = 900.0f; // fy
-    calib.proj_K.at<float>(0, 2) = 960.0f;              // cx
-    calib.proj_K.at<float>(1, 2) = 1252.8f;             // cy
+    // Optoma GT1080HDR Parameters
+    calib.proj_K.at<float>(0, 0) = 1000.0;                      // fx
+    calib.proj_K.at<float>(1, 1) = 1000.0f;                     // fy
+    // If cx or cy are outside of the image plane (less than 0 or greater than image dimensions),
+    // you will need a custom OpenCV build that is modified to remove the bounds check (in calibration.cpp).
+    calib.proj_K.at<float>(0, 2) = 960.0f;                      // cx (1920 / 2)
+    calib.proj_K.at<float>(1, 2) = 1252.8f;                     // cy (116% offset, so 1080 * 1.16 = 1252.8)
     calib.proj_kc = cv::Mat::zeros(1, 5, CV_32F);
-    int proj_flags = cv::CALIB_USE_INTRINSIC_GUESS | cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_ASPECT_RATIO | cv::CALIB_FIX_K1 | cv::CALIB_FIX_K2 | cv::CALIB_FIX_K3;
+
+    // Utilize the intrinsic guess above, fix the principal point and aspect ratio in that guess. Do not solve for tangent distortion or higher order (k3+) radial distortion terms.
+    int proj_flags = cv::CALIB_USE_INTRINSIC_GUESS | cv::CALIB_FIX_PRINCIPAL_POINT | cv::CALIB_FIX_ASPECT_RATIO | cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_K3;
     calib.proj_error = cv::calibrateCamera(world_corners_active, projector_corners_active, projector_size, calib.proj_K, calib.proj_kc, proj_rvecs, proj_tvecs,
                                              placeholder, placeholder, calib.proj_per_view_errors, proj_flags, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
+    
+    // Try and refine principal point estimate.
+    proj_flags = cv::CALIB_USE_INTRINSIC_GUESS | cv::CALIB_FIX_ASPECT_RATIO | cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_K3 | cv::CALIB_FIX_K1 | cv::CALIB_FIX_K2 | cv::CALIB_FIX_FOCAL_LENGTH;
+    calib.proj_error = cv::calibrateCamera(world_corners_active, projector_corners_active, projector_size, calib.proj_K, calib.proj_kc, proj_rvecs, proj_tvecs,
+                                             placeholder, placeholder, calib.proj_per_view_errors, proj_flags, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 50, DBL_EPSILON));
+
 /*
     //TMP: estimate an initial stereo R and T
     double errStereo = 0.0;
@@ -1058,9 +1066,9 @@ void Application::calibrate(void)
 
     //stereo calibration
     processing_message(" * Calibrate stereo");
+    int stereo_flags = cv::CALIB_FIX_INTRINSIC;
     calib.stereo_error = cv::stereoCalibrate(world_corners_active, camera_corners_active, projector_corners_active, calib.cam_K, calib.cam_kc, calib.proj_K, calib.proj_kc, 
-                                                imageSize /*ignored*/, calib.R, calib.T, calib.E, calib.F, calib.stereo_per_view_errors,
-                                                cv::CALIB_FIX_INTRINSIC /*cv::CALIB_USE_INTRINSIC_GUESS*/ + cal_flags, 
+                                                imageSize /*ignored*/, calib.R, calib.T, calib.E, calib.F, calib.stereo_per_view_errors, stereo_flags,
                                                 cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 150, DBL_EPSILON));
 
     //stereo rectification homography
