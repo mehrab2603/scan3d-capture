@@ -92,4 +92,12 @@ To build with Photoneo support:
 
 # Usage
 
-TODO: Copy Ye Min's guidelines here.
+1. Currently you will need to manually edit the known intrinsics for the
+   camera in `Application.cpp`, around line 913.
+
+2. Currently, you will need to manually edit the intrinsic guess for the
+   projector in `Application.cpp`, around line 945.
+
+3. Build the project after editing the intrinsics.
+
+4. Capture 20+ poses of the checkerboard in view of the camera.
